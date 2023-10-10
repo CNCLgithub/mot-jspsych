@@ -1,0 +1,41 @@
+@import "~jspsych/css/jspsych.css";
+
+.jspsych-display-element {
+  background-color: #ffffff;
+}
+
+.mot-target {
+  background-color: #020fd7;
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  border-radius: 25%;
+  display: inline-block;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.mot-distractor {
+  background-color: #000000;
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.button {
+  position: fixed;
+  bottom: 5%;
+}
+
+.mot-prompt {
+  position: fixed;
+  bottom: 10%;
+}
