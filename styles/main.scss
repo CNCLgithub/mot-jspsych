@@ -4,6 +4,16 @@
   background-color: #ffffff;
 }
 
+.mot-div {
+  background-color: #ffffff;
+  height: 500px;
+  width: 500px;
+  border-style: solid;
+  border-width: 20px;
+  border-color: #000000;
+  display: flex;
+}
+
 .mot-target {
   background-color: #020fd7;
   position: absolute;
@@ -14,7 +24,6 @@
   margin: 0 auto;
   left: 0;
   right: 0;
-  text-align: center;
 }
 
 .mot-distractor {
@@ -27,7 +36,6 @@
   margin: 0 auto;
   left: 0;
   right: 0;
-  text-align: center;
 }
 
 .button {

@@ -25,6 +25,10 @@ const info = <const>{
       type: ParameterType.STRING,
       description: "The css class describing target appearance.",
     },
+    display_size: {
+      type: ParameterType.INT,
+      description: "The size in pixels of the (square) display.",
+    },
     step_dur: {
       type: ParameterType.FLOAT,
       default: 41.67,
@@ -68,8 +72,15 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     // parse scene json
     let state = JSON.parse(trial.scene);
     let n_objects = state[0].length;
-    var obj_elems = Array<HTMLElement>(n_objects);
+    let obj_elems = Array<HTMLElement>(n_objects);
     let selected = Array<Boolean>(n_objects);
+    let kb_events: Array<number> = [];
+    let start_time: number = 0.0;
+
+    // add scene border
+    let mot_el = document.createElement("div");
+    mot_el.className = "mot-div";
+    display_element.appendChild(mot_el);
 
     // initialize animation timeline
     let tl = anime.timeline({
@@ -79,11 +90,30 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
     // add prompt at end of animation
     tl.complete = () => {
+      //disable keyboard
+      this.jsPsych.pluginAPI.cancelKeyboardResponse(effort_kb);
+      // ensure that `mot-div` is solid
+      anime.set(mot_el, { borderColor: '#000000' });
       let mot_prompt = document.createElement("span");
       mot_prompt.className = "mot-prompt";
       mot_prompt.innerHTML = `Please select ${trial.targets}`;
       display_element.appendChild(mot_prompt);
-    }
+    };
+
+    const t_pos = (xy: Array<number>) => {
+      let [x, y] = xy;
+      // from center coordinates to div top-left corner
+      let tx = (x / 800) * trial.display_size;
+      // adjust by object radius
+      tx *= 0.92 // if ds = 500px, range from [-230, +230]
+      // tx += 0.05 * trial.display_size; // 40px / 800px
+      // from center coordinates to div top-left corner
+      let ty = (-(y / 800) + 0.5) * (trial.display_size);
+      // adjust by object radius
+      ty *= 0.92 // if ds = 500px, range from [0, 460]
+      // ty -= 0.05 * trial.display_size;
+      return ([tx, ty]);
+    };
 
     // populate scene with objects
     for (let i=0; i<obj_elems.length; i++) {
@@ -93,9 +123,6 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       obj_el.className = css_cls;
       obj_el.id = `obj_${i}`;
       obj_el.addEventListener("click", () => {
-        console.log("object click");
-        console.log(anime.running);
-        console.log(tl);
         if (tl.completed) {
           selected[i] = !(selected[i]);
           obj_el.className = selected[i] ?
@@ -105,16 +132,14 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         }
       });
       // store info
-      display_element.appendChild(obj_el);
+      mot_el.appendChild(obj_el);
       obj_elems[i] = obj_el;
       selected[i] = false;
       // initial positoins of objects
-      let [x, y] = state[0][i];
+      let [x, y] = t_pos(state[0][i].slice(0, 2));
       tl.set(obj_elems[i], {
-        translateX: x / 2.0,
-        translateY: y / 2.0,
-        // translateX: `${(x / 800.0)}%`,
-        // translateY: `${(y / 800.0)}%`,
+        translateX: x,
+        translateY: y,
       });
     }
 
@@ -134,31 +159,61 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     // pre-motion phase
     // indicate targets
     this.jsPsych.pluginAPI.setTimeout(() => {
+      // hide targets
       for (let i = 0; i < trial.targets; i++) {
         obj_elems[i].className = trial.object_class;
       }
+      // mark animation start time
+      start_time = performance.now();
+      console.log("start_time", start_time);
+      // start animation
       tl.play();
     }, trial.premotion_dur);
 
     // motion phase
     for (let i = 0; i < n_objects; i++) {
+      let i_pos = state.map(frame => t_pos(frame[i].slice(0, 2)));
       tl.add({
         targets: obj_elems[i],
-        translateX: state.map(s => ({value: s[i][0]/2, duration: trial.step_dur})),
-        translateY: state.map(s => ({value: s[i][1]/2, duration: trial.step_dur})),
+        translateX: i_pos.map(f => ({value: f[0],
+                                     duration: trial.step_dur})),
+        translateY: i_pos.map(f => ({value: f[1],
+                                     duration: trial.step_dur})),
         // motion begins at end of `premotion_dur`
       }, 0);
     }
 
-    // response phase
+    // effort responses
+    let effort_kb = this.jsPsych.pluginAPI.getKeyboardResponse({
+      callback_function: () => {
+        if (start_time > 0){
+          let rt = performance.now() - start_time;
+          let last_rt = kb_events.length == 0 ? 0 : kb_events[kb_events.length - 1];
+          if ((rt - last_rt) > 200) {
+            kb_events.push(rt);
+            anime({
+              targets: mot_el,
+              borderColor: ['#000000', '#FFFFFF'],
+              easing: 'easeInOutSine',
+              duration: 100,
+              direction: 'alternate',
+              loop: 6,
+            });
+          }
+        }
+      },
+      valid_responses: [' '],
+      rt_method: 'performance',
+      persist: true,
+      allow_held_key: true,
+    });
+
+    // target designation phase
     // `after_response` is called whenever an object is clicked.
     // if enough objects are selected, the `next` button will appear.
     const after_response = () => {
-      console.log(selected);
-      let selections = selected.filter(Boolean);
-      console.log(selections);
       if (tl.completed &&
-        selections.length >= trial.targets) {
+        selected.filter(Boolean).length >= trial.targets) {
         allow_next();
       } else {
         disable_next();
@@ -173,6 +228,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       var trial_data = {
         selected_objects: selected,
         selection_timings: "value",
+        kb_rts : kb_events,
       };
       display_element.innerHTML = "";
       // end trial

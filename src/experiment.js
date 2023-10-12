@@ -16,7 +16,7 @@ import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 
 // trial list
-import trials from '../assets/trials.json';
+import trials from '../assets/exp2_probes.json';
 
 /**
  * This function will be executed by jsPsych Builder and is expected to run the jsPsych experiment
@@ -48,13 +48,14 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   //   fullscreen_mode: true,
   // });
 
-  let scene_parsed = JSON.stringify(trials[0].positions);
+  let scene_parsed = JSON.stringify(trials[1].positions);
   timeline.push({
     type: MOTPlugin,
     scene: scene_parsed,
     targets: 4,
     object_class: "mot-distractor",
     target_class: "mot-target",
+    display_size: 500,
   })
 
   await jsPsych.run(timeline);
