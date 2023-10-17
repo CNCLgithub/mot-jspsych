@@ -172,6 +172,9 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       // show effort dial
       effort_el.style.display = 'block';
       effort_el.style.bottom = '5px';
+      // add dial event
+      document.addEventListener("mousemove", handle_mouse_move,
+                                false);
       // start animation
       tl.play();
     }, trial.premotion_dur);
@@ -190,24 +193,14 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     }
 
     // effort responses
-    const handle_mouse_move = (m) => {
-      let n = effort_dial.length
-      let last_rt = n == 0 ? 0 : effort_dial[n-1].rt;
+    const handle_mouse_move = (m: MouseEvent) => {
       let rt = performance.now() - start_time;
-      if ((rt - last_rt) > 50) {
-        effort_dial.push({
-          rt : rt,
-          y : m.clientY,
-        });
-        anime({
-          targets: effort_el,
-          translateY: m.clientY,
-          easing: 'easeInOutSine',
-          duration: 20,
-        });
-      }
+      effort_dial.push({
+        rt : rt,
+        y : m.clientY,
+      });
+      effort_el.style.transform = `translateY(${m.clientY}px)`;
     };
-    document.addEventListener("mousemove", handle_mouse_move, false);
 
     // target designation phase
     // `after_response` is called whenever an object is clicked.
