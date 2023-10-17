@@ -60,6 +60,8 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     object_class: "mot-distractor",
     target_class: "mot-target",
     display_size: 500,
+    effort_dial: true,
+    world_scale: 800.0, // legacy datasets are +- 400 units
   });
 
   timeline.push({

@@ -44,10 +44,15 @@ const info = <const>{
       default: Infinity,
       description: "The duration of the response phase (in ms).",
     },
-    slider: {
+    effort_dial: {
       type: ParameterType.BOOL,
       default: false,
-      description: "Display and collect responses from a dynamic effort slider.",
+      description: "Display and collect responses from a dynamic effort dial.",
+    },
+    world_scale: {
+      type: ParameterType.FLOAT,
+      default: 1.0,
+      description: "Scaling factor for object trajectories.",
     },
   },
 };
@@ -68,23 +73,30 @@ class MOTPlugin implements JsPsychPlugin<Info> {
   constructor(private jsPsych: JsPsych) {}
 
   trial(display_element: HTMLElement, trial: TrialType<Info>) {
+    /**
+     * SETUP
+     */
 
-    // parse scene json
+    // VARIABLE DECLARATIONS
     let state = JSON.parse(trial.scene);
     let n_objects = state[0].length;
     let obj_elems = Array<HTMLElement>(n_objects);
     let selected = Array<Boolean>(n_objects);
+    let effort_el: HTMLElement;
     let effort_dial = [];
     let start_time: number = 0.0;
 
-    // add scene box
+
+    // ELEMENTS
     let mot_el = document.createElement("div");
     mot_el.className = "mot-div";
     display_element.appendChild(mot_el);
-    // add effort dial indicator
-    let effort_el = document.createElement("div");
-    effort_el.className = "hl";
-    display_element.appendChild(effort_el);
+    // effort dial
+    if (trial.effort_dial) {
+      effort_el = document.createElement("div");
+      effort_el.className = "hl";
+      display_element.appendChild(effort_el);
+    }
 
     // initialize animation timeline
     let tl = anime.timeline({
@@ -94,9 +106,12 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
     // add prompt at end of animation
     tl.complete = () => {
+      // clean up effort dial
+      if (trial.effort_dial) {
+        effort_el.style.display = 'none';
+        document.removeEventListener("mousemove", handle_mouse_move, false);
+      }
       // disable effort dial
-      effort_el.style.display = 'none';
-      document.removeEventListener("mousemove", handle_mouse_move, false);
       let mot_prompt = document.createElement("span");
       mot_prompt.className = "mot-prompt";
       mot_prompt.innerHTML = `Please select ${trial.targets}`;
@@ -106,12 +121,12 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     const t_pos = (xy: Array<number>) => {
       let [x, y] = xy;
       // from center coordinates to div top-left corner
-      let tx = (x / 800) * trial.display_size;
+      let tx = (x / trial.world_scale) * trial.display_size;
       // adjust by object radius
       tx *= 0.92 // if ds = 500px, range from [-230, +230]
-      // tx += 0.05 * trial.display_size; // 40px / 800px
+      // tx += 0.05 * trial.display_size; // 40px / trial.world_scalepx
       // from center coordinates to div top-left corner
-      let ty = (-(y / 800) + 0.5) * (trial.display_size);
+      let ty = (-(y / trial.world_scale) + 0.5) * (trial.display_size);
       // adjust by object radius
       ty *= 0.92 // if ds = 500px, range from [0, 460]
       // ty -= 0.05 * trial.display_size;
@@ -143,6 +158,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       tl.set(obj_elems[i], {
         translateX: x,
         translateY: y,
+        scale: trial.display_size / trial.world_scale,
       });
     }
 
@@ -168,13 +184,15 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       }
       // mark animation start time
       start_time = performance.now();
-      console.log("start_time", start_time);
-      // show effort dial
-      effort_el.style.display = 'block';
-      effort_el.style.bottom = '5px';
-      // add dial event
-      document.addEventListener("mousemove", handle_mouse_move,
-                                false);
+      if (trial.effort_dial) {
+        // show effort dial
+        effort_el.style.display = 'block';
+        // effort_el.style.bottom = '5px';
+        // effort_el.style
+        // add dial event
+        document.addEventListener("mousemove", handle_mouse_move,
+                                  false);
+      }
       // start animation
       tl.play();
     }, trial.premotion_dur);
