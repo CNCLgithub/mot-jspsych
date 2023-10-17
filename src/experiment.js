@@ -9,9 +9,11 @@
 // You can import stylesheets (.scss or .css).
 import "../styles/main.scss";
 
-import FullscreenPlugin from "@jspsych/plugin-fullscreen";
-import HtmlKeyboardResponsePlugin from "@jspsych/plugin-html-keyboard-response";
 import PreloadPlugin from "@jspsych/plugin-preload";
+import FullscreenPlugin from "@jspsych/plugin-fullscreen";
+// import HtmlKeyboardResponsePlugin from "@jspsych/plugin-html-keyboard-response";
+import HTMLButtonResponsePlugin from "@jspsych/plugin-html-button-response";
+import HTMLSliderResponsePlugin from "@jspsych/plugin-html-slider-response";
 import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 
@@ -38,8 +40,10 @@ export async function run({ assetPaths, input = {}, environment, title, version 
 
   // Welcome screen
   timeline.push({
-    type: HtmlKeyboardResponsePlugin,
+    type: HTMLButtonResponsePlugin,
     stimulus: "<p>Welcome to object tracking!<p/>",
+    choices: ['Next'],
+    prompt: "<p>Click `Next` to continue.<p/>"
   });
 
   // Switch to fullscreen
@@ -56,7 +60,16 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     object_class: "mot-distractor",
     target_class: "mot-target",
     display_size: 500,
-  })
+  });
+
+  timeline.push({
+    type: HTMLSliderResponsePlugin,
+    stimulus: `<div style="width:500px;">
+        <p>How effortful was tracking?</p>
+        </div>`,
+    require_movement: true,
+    labels: ['None', 'Somewhat', 'A lot']
+  });
 
   await jsPsych.run(timeline);
 

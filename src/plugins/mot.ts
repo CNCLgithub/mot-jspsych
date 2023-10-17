@@ -74,13 +74,17 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     let n_objects = state[0].length;
     let obj_elems = Array<HTMLElement>(n_objects);
     let selected = Array<Boolean>(n_objects);
-    let kb_events: Array<number> = [];
+    let effort_dial = [];
     let start_time: number = 0.0;
 
-    // add scene border
+    // add scene box
     let mot_el = document.createElement("div");
     mot_el.className = "mot-div";
     display_element.appendChild(mot_el);
+    // add effort dial indicator
+    let effort_el = document.createElement("div");
+    effort_el.className = "hl";
+    display_element.appendChild(effort_el);
 
     // initialize animation timeline
     let tl = anime.timeline({
@@ -90,10 +94,9 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
     // add prompt at end of animation
     tl.complete = () => {
-      //disable keyboard
-      this.jsPsych.pluginAPI.cancelKeyboardResponse(effort_kb);
-      // ensure that `mot-div` is solid
-      anime.set(mot_el, { borderColor: '#000000' });
+      // disable effort dial
+      effort_el.style.display = 'none';
+      document.removeEventListener("mousemove", handle_mouse_move, false);
       let mot_prompt = document.createElement("span");
       mot_prompt.className = "mot-prompt";
       mot_prompt.innerHTML = `Please select ${trial.targets}`;
@@ -166,6 +169,9 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       // mark animation start time
       start_time = performance.now();
       console.log("start_time", start_time);
+      // show effort dial
+      effort_el.style.display = 'block';
+      effort_el.style.bottom = '5px';
       // start animation
       tl.play();
     }, trial.premotion_dur);
@@ -184,29 +190,24 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     }
 
     // effort responses
-    let effort_kb = this.jsPsych.pluginAPI.getKeyboardResponse({
-      callback_function: () => {
-        if (start_time > 0){
-          let rt = performance.now() - start_time;
-          let last_rt = kb_events.length == 0 ? 0 : kb_events[kb_events.length - 1];
-          if ((rt - last_rt) > 200) {
-            kb_events.push(rt);
-            anime({
-              targets: mot_el,
-              borderColor: ['#000000', '#FFFFFF'],
-              easing: 'easeInOutSine',
-              duration: 100,
-              direction: 'alternate',
-              loop: 6,
-            });
-          }
-        }
-      },
-      valid_responses: [' '],
-      rt_method: 'performance',
-      persist: true,
-      allow_held_key: true,
-    });
+    const handle_mouse_move = (m) => {
+      let n = effort_dial.length
+      let last_rt = n == 0 ? 0 : effort_dial[n-1].rt;
+      let rt = performance.now() - start_time;
+      if ((rt - last_rt) > 50) {
+        effort_dial.push({
+          rt : rt,
+          y : m.clientY,
+        });
+        anime({
+          targets: effort_el,
+          translateY: m.clientY,
+          easing: 'easeInOutSine',
+          duration: 20,
+        });
+      }
+    };
+    document.addEventListener("mousemove", handle_mouse_move, false);
 
     // target designation phase
     // `after_response` is called whenever an object is clicked.
@@ -228,7 +229,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       var trial_data = {
         selected_objects: selected,
         selection_timings: "value",
-        kb_rts : kb_events,
+        effort_dial : effort_dial,
       };
       display_element.innerHTML = "";
       // end trial
