@@ -18,7 +18,43 @@ import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 
 // trial list
-import trials from '../assets/exp2_probes.json';
+import trial from '../assets/trial.json';
+
+function gen_trial(jspsych, trial_id, positions, reverse = false) {
+
+  if (reverse) {
+    positions = positions.toReversed();
+  }
+  const tracking = {
+    type: MOTPlugin,
+    scene: JSON.stringify(positions),
+    targets: 4,
+    object_class: "mot-distractor",
+    target_class: "mot-target",
+    display_size: 500,
+    effort_dial: true,
+    world_scale: 800.0, // legacy datasets are +- 400 units
+    premotion_dur: 4000.0,
+  };
+
+  const effort_slider = {
+    type: HTMLSliderResponsePlugin,
+    stimulus: `<div style="width:500px;">
+        <p>How effortful was tracking?</p>
+        </div>`,
+    require_movement: true,
+    labels: ['None', 'Somewhat', 'A lot']
+  };
+
+  const tl = {
+    timeline: [tracking, effort_slider],
+    data: {
+      trial_id: trial_id,
+      reversed: reverse
+    }
+  };
+  return (tl);
+};
 
 /**
  * This function will be executed by jsPsych Builder and is expected to run the jsPsych experiment
@@ -52,26 +88,8 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   //   fullscreen_mode: true,
   // });
 
-  let scene_parsed = JSON.stringify(trials[1].positions);
-  timeline.push({
-    type: MOTPlugin,
-    scene: scene_parsed,
-    targets: 4,
-    object_class: "mot-distractor",
-    target_class: "mot-target",
-    display_size: 500,
-    effort_dial: true,
-    world_scale: 800.0, // legacy datasets are +- 400 units
-  });
-
-  timeline.push({
-    type: HTMLSliderResponsePlugin,
-    stimulus: `<div style="width:500px;">
-        <p>How effortful was tracking?</p>
-        </div>`,
-    require_movement: true,
-    labels: ['None', 'Somewhat', 'A lot']
-  });
+  timeline.push(gen_trial(jsPsych, 1, trial.positions));
+  timeline.push(gen_trial(jsPsych, 1, trial.positions, true));
 
   await jsPsych.run(timeline);
 

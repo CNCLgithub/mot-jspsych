@@ -112,8 +112,9 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         document.removeEventListener("mousemove", handle_mouse_move, false);
       }
       // disable effort dial
-      let mot_prompt = document.createElement("span");
-      mot_prompt.className = "mot-prompt";
+      let mot_prompt = document.createElement("div");
+      mot_prompt.className = "jspsych-display-element";
+      // mot_prompt.className = "mot-prompt";
       mot_prompt.innerHTML = `Please select ${trial.targets}`;
       display_element.appendChild(mot_prompt);
     };
@@ -165,10 +166,10 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     // create next button
     // will only appear after enough objects are selected
     var btn_el: HTMLButtonElement = document.createElement("button");
-    btn_el.className = "button";
+    btn_el.className = "jspsych-btn";
     btn_el.id = "resp_btn";
     btn_el.disabled = true;
-    btn_el.style.display = "none";
+    btn_el.style = "margin:10px";
     btn_el.innerHTML = "Next"
     btn_el.addEventListener("click", (_) => {
       end_trial();
@@ -251,12 +252,12 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     // called by `after_response`
     const allow_next = () => {
       btn_el.disabled = false;
-      btn_el.style.display = "block";
+      // btn_el.style.display = "block";
     };
 
     const disable_next = () => {
       btn_el.disabled = true;
-      btn_el.style.display = "none";
+      // btn_el.style.display = "none";
     };
   }
 
