@@ -44,6 +44,11 @@ const info = <const>{
       default: Infinity,
       description: "The duration of the response phase (in ms).",
     },
+    target_designation: {
+      type: ParameterType.BOOL,
+      default: true,
+      description: "Collect target designations",
+    },
     effort_dial: {
       type: ParameterType.BOOL,
       default: false,
@@ -82,6 +87,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     let n_objects = state[0].length;
     let obj_elems = Array<HTMLElement>(n_objects);
     let selected = Array<Boolean>(n_objects);
+    let mot_prompt: HTMLElement;
     let effort_el: HTMLElement;
     let effort_dial = [];
     let start_time: number = 0.0;
@@ -97,6 +103,16 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       effort_el.className = "hl";
       display_element.appendChild(effort_el);
     }
+    // mot prompt
+
+    if (trial.target_designation) {
+        mot_prompt = document.createElement("div");
+        mot_prompt.className = "jspsych-top";
+        // mot_prompt.className = "mot-prompt";
+        mot_prompt.style = "color:white";
+        mot_prompt.innerHTML = `Please select ${trial.targets} objects`;
+        display_element.appendChild(mot_prompt);
+    }
 
     // initialize animation timeline
     let tl = anime.timeline({
@@ -106,17 +122,17 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
     // add prompt at end of animation
     tl.complete = () => {
+      // viz prompt
+      if (trial.target_designation) { 
+        mot_prompt.style = "color:black";
+      } else {
+        allow_next();
+      }
       // clean up effort dial
       if (trial.effort_dial) {
         effort_el.style.display = 'none';
         document.removeEventListener("mousemove", handle_mouse_move, false);
       }
-      // disable effort dial
-      let mot_prompt = document.createElement("div");
-      mot_prompt.className = "jspsych-display-element";
-      // mot_prompt.className = "mot-prompt";
-      mot_prompt.innerHTML = `Please select ${trial.targets}`;
-      display_element.appendChild(mot_prompt);
     };
 
     const t_pos = (xy: Array<number>) => {
@@ -138,18 +154,20 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     for (let i=0; i<obj_elems.length; i++) {
       const css_cls = (i < trial.targets) ? trial.target_class : trial.object_class
       const obj_el = document.createElement("span");
-      // const obj_i = i;
       obj_el.className = css_cls;
       obj_el.id = `obj_${i}`;
-      obj_el.addEventListener("click", () => {
-        if (tl.completed) {
-          selected[i] = !(selected[i]);
-          obj_el.className = selected[i] ?
-            trial.target_class : trial.object_class;
-          // after a click - check if enough objects are selected
-          after_response();
-        }
-      });
+      // optionally add object selection
+      if (trial.target_designation) {
+        obj_el.addEventListener("click", () => {
+          if (tl.completed) {
+            selected[i] = !(selected[i]);
+            obj_el.className = selected[i] ?
+              trial.target_class : trial.object_class;
+            // after a click - check if enough objects are selected
+            after_response();
+          }
+        });
+      }
       // store info
       mot_el.appendChild(obj_el);
       obj_elems[i] = obj_el;
@@ -164,7 +182,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     }
 
     // create next button
-    // will only appear after enough objects are selected
+    // enabled after motion, optionally after enough selections
     var btn_el: HTMLButtonElement = document.createElement("button");
     btn_el.className = "jspsych-btn";
     btn_el.id = "resp_btn";
@@ -187,7 +205,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
       start_time = performance.now();
       if (trial.effort_dial) {
         // show effort dial
-        effort_el.style.display = 'block';
+        // effort_el.style.display = 'block';
         // effort_el.style.bottom = '5px';
         // effort_el.style
         // add dial event
@@ -225,11 +243,13 @@ class MOTPlugin implements JsPsychPlugin<Info> {
     // `after_response` is called whenever an object is clicked.
     // if enough objects are selected, the `next` button will appear.
     const after_response = () => {
-      if (tl.completed &&
-        selected.filter(Boolean).length >= trial.targets) {
-        allow_next();
-      } else {
-        disable_next();
+      if (tl.completed) {
+        // check for minimum number of selections
+        if (selected.filter(Boolean).length >= trial.targets) {
+          allow_next();
+        } else {
+          disable_next();
+        }
       }
     };
 
