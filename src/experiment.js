@@ -35,19 +35,20 @@ var EXP_DURATION = 5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
 const MOT_DIM = 500; // pixels
 const STIM_DEG = 10;
 const PIXELS_PER_UNIT = MOT_DIM / STIM_DEG;
+var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
-const SKIP_PROLIFIC_ID = false;
-const SKIP_INSTRUCTIONS = false;
+const SKIP_PROLIFIC_ID = true;
+const SKIP_INSTRUCTIONS = true;
 
 
 function gen_trial(jspsych,
-                   trial_id,
-                   positions,
-                   reverse = false,
-                   targets = true,
-                   effort_dial = true,
-                   effort_slider = true
-                   ) {
+  trial_id,
+  positions,
+  reverse = false,
+  targets = true,
+  effort_dial = true,
+  effort_slider = true
+) {
 
   if (reverse) {
     positions = positions.toReversed();
@@ -58,7 +59,7 @@ function gen_trial(jspsych,
     targets: 4,
     object_class: "mot-distractor",
     target_class: "mot-target",
-    display_size: 500,
+    display_size: MOT_DIM * CHINREST_SCALE,
     target_designation: targets,
     effort_dial: effort_dial,
     world_scale: 800.0, // legacy datasets are +- 400 units
@@ -143,12 +144,12 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     type: InstructionsPlugin,
     pages: [
       `<h1>Hi, welcome to our study!</h1><br><br> ` +
-        `Please take a moment to adjust your seating so that you can comfortably watch the monitor and use the keyboard/mouse.<br> ` +
-        `Feel free to dim the lights as well.  ` +
-        `Close the door or do whatever is necessary to minimize disturbance during the experiment. <br> ` +
-        `Please also take a moment to silence your phone so that you are not interrupted by any messages mid-experiment. ` +
-        `<br><br> ` +
-        `Click <b>Next</b> when you are ready to calibrate your display. `,
+      `Please take a moment to adjust your seating so that you can comfortably watch the monitor and use the keyboard/mouse.<br> ` +
+      `Feel free to dim the lights as well.  ` +
+      `Close the door or do whatever is necessary to minimize disturbance during the experiment. <br> ` +
+      `Please also take a moment to silence your phone so that you are not interrupted by any messages mid-experiment. ` +
+      `<br><br> ` +
+      `Click <b>Next</b> when you are ready to calibrate your display. `,
     ],
     show_clickable_nav: true,
     allow_backward: false,
@@ -164,39 +165,40 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   });
 
   // Virtual chinrest
-  // timeline.push({
-  //   type: VirtualChinrestPlugin,
-  //   blindspot_reps: 3,
-  //   resize_units: "deg",
-  //   pixels_per_unit: PIXELS_PER_UNIT
-  // });
+  timeline.push({
+    type: VirtualChinrestPlugin,
+    blindspot_reps: 3,
+    resize_units: "deg",
+    pixels_per_unit: PIXELS_PER_UNIT,
+    on_finish: function(data) {
+      CHINREST_SCALE = data.scale_factor;
+    },
+  });
 
-  console.log(N_TRIALS);
-  console.log(trial_list);
 
   const instruct_tl = [];
   instruct_tl.push({
     type: InstructionsPlugin,
     pages: [
-      `The study is designed to be <i>challenging</i>. Sometimes, you'll be certain about what you saw.`+
-        `Other times, you won't be -- and this is okay! Just give your best guess each time. <br><br>` +
-        `Click <b>Next</b> to continue.`,
+      `The study is designed to be <i>challenging</i>. Sometimes, you'll be certain about what you saw.` +
+      `Other times, you won't be -- and this is okay! Just give your best guess each time. <br><br>` +
+      `Click <b>Next</b> to continue.`,
 
       `We know it is also difficult to stay focused for so long, especially when you are doing the same` +
-        `thing over and over. But remember, the experiment will be all over in less than ${EXP_DURATION} ` +
-        `minutes. <br>` + `There are <strong>${N_TRIALS} trials</strong> in this study. <br>` +
-        `Please do your best to remain focused! ` +
-        ` Your responses will only be useful to us if you remain focused. <br><br>` +
-        `Click <b>Next</b> to continue.`,
+      `thing over and over. But remember, the experiment will be all over in less than ${EXP_DURATION} ` +
+      `minutes. <br>` + `There are <strong>${N_TRIALS} trials</strong> in this study. <br>` +
+      `Please do your best to remain focused! ` +
+      ` Your responses will only be useful to us if you remain focused. <br><br>` +
+      `Click <b>Next</b> to continue.`,
 
       "In this task, you will observe a series of objects move on the screen.<br>" +
-        "At the beginning of each instance of the task, you will see <b>4</b> of the <b>8</b> " +
-        "objects highlighted in <span style='color:blue'>BLUE</span> "+
-        `designating them as <span style="color:blue;"><b>targets</b></span>.<br>` +
-        "Shortly after, the <span style='color:blue'>BLUE</span> indication will "+
-        "dissapear and the objects will begin to move.<br>" +
-        "Your main task is to keep track of the targets as they move.<br>" +
-        "Click <b>Next</b> to see an example of a dynamic scene with targets.",
+      "At the beginning of each instance of the task, you will see <b>4</b> of the <b>8</b> " +
+      "objects highlighted in <span style='color:blue'>BLUE</span> " +
+      `designating them as <span style="color:blue;"><b>targets</b></span>.<br>` +
+      "Shortly after, the <span style='color:blue'>BLUE</span> indication will " +
+      "dissapear and the objects will begin to move.<br>" +
+      "Your main task is to keep track of the targets as they move.<br>" +
+      "Click <b>Next</b> to see an example of a dynamic scene with targets.",
     ],
     show_clickable_nav: true,
     // show_page_number: true,
@@ -210,10 +212,10 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     type: InstructionsPlugin,
     pages: [
       `At the end of each instance of the task, you need to select the <span style="color:blue"><b>4 targets</b></span> <span class="query-object"></span> by clicking on the objects with your mouse.<br>` +
-        `If you make a mistake in your selection, you can deselect by clicking on the object again.<br>` +
-        `You need to select 4 objects to be able to progress.` +
-        `If you lost track of some of the targets, just make your best guess as to which objects are targets.<br>` +
-        "Click <b>Next</b> to give it a try.",
+      `If you make a mistake in your selection, you can deselect by clicking on the object again.<br>` +
+      `You need to select 4 objects to be able to progress.` +
+      `If you lost track of some of the targets, just make your best guess as to which objects are targets.<br>` +
+      "Click <b>Next</b> to give it a try.",
     ],
     show_clickable_nav: true,
     // show_page_number: true,
@@ -226,15 +228,15 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   instruct_tl.push({
     type: InstructionsPlugin,
     pages: [
-      `If while tracking the moving objects, you feel a sense of effort maintaining the target set,`+
-        ` please press and hold the <b>SPACEBAR</b> for the duration that you experience the sense of effort.  <br>` +
-        `Additionally, at then end of the trial, please use the presented slider to report the overall amount of ` +
-        `effort you experienced for that trial.`,
+      `If while tracking the moving objects, you feel a sense of effort maintaining the target set,` +
+      ` please press and hold the <b>SPACEBAR</b> for the duration that you experience the sense of effort.  <br>` +
+      `Additionally, at then end of the trial, please use the presented slider to report the overall amount of ` +
+      `effort you experienced for that trial.`,
 
       `Remember, the <i>main task</i> is to correctly identify the <span style="color:blue"><b>4 targets</b></span>.<br>` +
-        `The secondary task is to press <b>SPACEBAR</b> whenever you feel a sense of effort while tracking ` +
-        `and to report the overall amount of effort at the end of the trial.<br>` +
-        "Click <b>Next</b> to practice.",
+      `The secondary task is to press <b>SPACEBAR</b> whenever you feel a sense of effort while tracking ` +
+      `and to report the overall amount of effort at the end of the trial.<br>` +
+      "Click <b>Next</b> to practice.",
     ],
     show_clickable_nav: true,
     // show_page_number: true,
@@ -249,7 +251,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   const comp_check = {
     type: SurveyMultiChoicePlugin,
     preamble: "<h2>Comprehension Check</h2> " +
-      "<p> Before beginning the experiment, you must answer a few simple questions to ensure that the instructions are clear." + 
+      "<p> Before beginning the experiment, you must answer a few simple questions to ensure that the instructions are clear." +
       "<br> If you do not answer all questions correctly, you will be returned to the start of the instructions.</p>",
     questions: [{
       prompt: "Which of the following is <b>TRUE</b>",
@@ -261,19 +263,19 @@ export async function run({ assetPaths, input = {}, environment, title, version 
       ],
       required: true
     },
-      {
-        prompt: " Which of the following statements is <b>FALSE</b>:",
-        name: 'check2',
-        options: [
-          "A) The secondary task is to indicate your sense of effort while tracking",
-          "B) You should maintain an arm-length distance from your monitor",
-          "C) The objects on the screen remain stationary"
-        ],
-        required: true
-      },
+    {
+      prompt: " Which of the following statements is <b>FALSE</b>:",
+      name: 'check2',
+      options: [
+        "A) The secondary task is to indicate your sense of effort while tracking",
+        "B) You should maintain an arm-length distance from your monitor",
+        "C) The objects on the screen remain stationary"
+      ],
+      required: true
+    },
     ],
     randomize_question_order: false,
-    on_finish: function (data) {
+    on_finish: function(data) {
       const q1 = data.response.check1[0];
       const q2 = data.response.check2[0];
       // set to true if both comp checks are passed
@@ -288,32 +290,32 @@ export async function run({ assetPaths, input = {}, environment, title, version 
 
   // feedback
   const comp_feedback = {
-      type: HTMLButtonResponsePlugin,
-      stimulus: () => {
-        console.log(jsPsych.data.getLastTrialData().values());
-        var last_correct_resp = jsPsych.data.getLastTrialData().values()[0].correct;
+    type: HTMLButtonResponsePlugin,
+    stimulus: () => {
+      console.log(jsPsych.data.getLastTrialData().values());
+      var last_correct_resp = jsPsych.data.getLastTrialData().values()[0].correct;
 
-        if (last_correct_resp) {
-            return `<span style='color:green'><h2>You passed the comprehension check!</h2></span> ` + `<br>When you're ready, please click <b>Next</b> to begin the study. `
-        } else {
-            return `<span style='color:red'><h2>You failed to respond <b>correctly</b> to all parts of the comprehension check.</h2></span> ` + `<br>Please click <b>Next</b> to revisit the instructions. `
-        }
-      },
-      choices: ['Next'],
-      data: {
-          // add any additional data that needs to be recorded here
-          type: "comp_feedback",
+      if (last_correct_resp) {
+        return `<span style='color:green'><h2>You passed the comprehension check!</h2></span> ` + `<br>When you're ready, please click <b>Next</b> to begin the study. `
+      } else {
+        return `<span style='color:red'><h2>You failed to respond <b>correctly</b> to all parts of the comprehension check.</h2></span> ` + `<br>Please click <b>Next</b> to revisit the instructions. `
       }
+    },
+    choices: ['Next'],
+    data: {
+      // add any additional data that needs to be recorded here
+      type: "comp_feedback",
+    }
   };
 
   // `comp_loop`: if answers are incorrect, `comp_check` will be repeated until answers are correct responses
   const comp_loop = {
-      timeline: [...instruct_tl, comp_check, comp_feedback],
-      loop_function: function (data) {
-          // return false if comprehension passes to break loop
-          // HACK: changing `timeline` will break this
-          return (!(data.values()[1].correct));
-      }
+    timeline: [...instruct_tl, comp_check, comp_feedback],
+    loop_function: function(data) {
+      // return false if comprehension passes to break loop
+      // HACK: changing `timeline` will break this
+      return (!(data.values()[1].correct));
+    }
   };
 
   // add comprehension loop
@@ -321,7 +323,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     timeline.push(comp_loop);
   };
 
- // add exp trials with random shuffle, unique per session
+  // add exp trials with random shuffle, unique per session
   for (const trial of jsPsych.randomization.shuffle(trial_list)) {
     const [tid, reverse] = trial;
     const positions = dataset[tid].positions;
