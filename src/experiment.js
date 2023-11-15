@@ -22,14 +22,15 @@ import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 // Prolific variables
 const PROLIFIC_URL = 'https://app.prolific.co/submissions/complete?cc=782B6DAB';
-// Trial list
+// Trials
+import examples from '../assets/examples.json';
 import dataset from '../assets/dataset.json';
 import trial_list from '../assets/trial_list.json';
+
 // Define global experiment variables
-// TODO: make `const`
-// HACK: replace with new trial 
-var EXAMPLE_TRIAL = dataset[0].positions
-var N_TRIALS = trial_list.length;
+// REVIEW: add more examples?
+const EXAMPLE_TRIAL = examples[0].positions
+const N_TRIALS = trial_list.length;
 const TIME_PER_TRIAL = dataset[0].positions.length / 24;
 var EXP_DURATION = 5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
 const MOT_DIM = 500; // pixels
@@ -38,7 +39,7 @@ const PIXELS_PER_UNIT = MOT_DIM / STIM_DEG;
 var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
 const SKIP_PROLIFIC_ID = true;
-const SKIP_INSTRUCTIONS = true;
+const SKIP_INSTRUCTIONS = false;
 
 
 function gen_trial(jspsych,
@@ -278,12 +279,10 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     on_finish: function(data) {
       const q1 = data.response.check1[0];
       const q2 = data.response.check2[0];
-      // set to true if both comp checks are passed
+      // both comp checks must pass
       data.correct = (q1 == 'B' && q2 == 'C');
-      console.log(data.correct);
     },
     data: {
-      // add any additional data that needs to be recorded here
       type: "comp_quiz",
     }
   };
@@ -292,14 +291,16 @@ export async function run({ assetPaths, input = {}, environment, title, version 
   const comp_feedback = {
     type: HTMLButtonResponsePlugin,
     stimulus: () => {
-      console.log(jsPsych.data.getLastTrialData().values());
       var last_correct_resp = jsPsych.data.getLastTrialData().values()[0].correct;
-
+      var msg;
       if (last_correct_resp) {
-        return `<span style='color:green'><h2>You passed the comprehension check!</h2></span> ` + `<br>When you're ready, please click <b>Next</b> to begin the study. `
+        msg = "<h2><span style='color:green'>You passed the comprehension check!</span>" +
+          "<br>When you're ready, please click <b>Next</b> to begin the study. </h2>";
       } else {
-        return `<span style='color:red'><h2>You failed to respond <b>correctly</b> to all parts of the comprehension check.</h2></span> ` + `<br>Please click <b>Next</b> to revisit the instructions. `
+        msg = "<h2><span style='color:red'>You failed to respond <b>correctly</b> to all" +
+          " parts of the comprehension check.</span> <br>Please click <b>Next</b> to revisit the instructions.</h2>"
       }
+      return msg
     },
     choices: ['Next'],
     data: {
