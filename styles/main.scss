@@ -71,15 +71,18 @@
 }
 
 /* consent.html - the consent form */
-#consent {
-  margin: 0 auto;
-  margin-top: 0;
-  width: 800px;
-  font-size: 100%;
+.consent {
+    display: block;
+    margin: 0px;
+    padding-top: 20vh;
+    height: auto;
+    width: 960px;
+    font-size: 100%;
+    overflow: visible;
 }
 
 .legal {
-  text-align: justify;
-  font-size: 11pt;
-  line-height: 1.1em;
+    text-align: justify;
+    font-size: 12pt;
+    line-height: 1.1em;
 }
