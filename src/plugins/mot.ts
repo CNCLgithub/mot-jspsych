@@ -90,13 +90,15 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         let mot_prompt: HTMLElement;
         let effort_dial = [];
         let start_time: number = 0.0;
-        let space_keydown: EventListener;
-        let space_keyup: EventListener;
+        const tot_dur = trial.step_dur * state.length;
+        let world_to_display = trial.display_size / trial.world_scale;
+        let obj_dim = 40.0 * world_to_display;
 
 
         // ELEMENTS
         let mot_el = document.createElement("div");
         mot_el.className = "mot-div";
+        mot_el.style = `width:${trial.display_size}px;height:${trial.display_size}px`;
         display_element.appendChild(mot_el);
 
         // mot prompt
@@ -123,25 +125,20 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             } else {
                 allow_next();
             }
-            // clean up effort dial
-            if (trial.effort_dial) {
-                document.removeEventListener("keydown", space_keydown, false);
-                document.removeEventListener("keyup", space_keyup, false);
-            }
+            // effort keyboarevents should termineate on their own
         };
 
         const t_pos = (xy: Array<number>) => {
             let [x, y] = xy;
             // from center coordinates to div top-left corner
-            let tx = (x / trial.world_scale) * trial.display_size;
+            // let tx = (x / trial.world_scale) * trial.display_size;
+            let tx = x * world_to_display; // -400 -> -250px
             // adjust by object radius
-            tx *= 0.92 // if ds = 500px, range from [-230, +230]
-            // tx += 0.05 * trial.display_size; // 40px / trial.world_scalepx
+            tx *= 0.95 // if ds = 500px, range from [-230, +230]
             // from center coordinates to div top-left corner
             let ty = (-(y / trial.world_scale) + 0.5) * (trial.display_size);
             // adjust by object radius
-            ty *= 0.92 // if ds = 500px, range from [0, 460]
-            // ty -= 0.05 * trial.display_size;
+            ty *= 0.95 // if ds = 500px, range from [0, 460]
             return ([tx, ty]);
         };
 
@@ -150,6 +147,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             const css_cls = (i < trial.targets) ? trial.target_class : trial.object_class
             const obj_el = document.createElement("span");
             obj_el.className = css_cls;
+            obj_el.style = `width:${obj_dim}px;height:${obj_dim}px`;
             obj_el.id = `obj_${i}`;
             // optionally add object selection
             if (trial.target_designation) {
@@ -172,7 +170,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             tl.set(obj_elems[i], {
                 translateX: x,
                 translateY: y,
-                scale: trial.display_size / trial.world_scale,
+                // scale: trial.display_size / trial.world_scale,
             });
         }
 
@@ -198,32 +196,32 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             start_time = performance.now();
             // add effort dial events
             if (trial.effort_dial) {
-                space_keydown = document.addEventListener("keydown",
+                document.addEventListener("keydown",
                     (event: KeyboardEvent) => {
                         // prevent duplicates for long presses 
                         const add_response = (effort_dial.length == 0) ||
-                            effort_dial[effort_dial.length - 1].type == "keyup";
+                            effort_dial[effort_dial.length - 1][0] == "keyup";
                         if (add_response && event.key == " ") {
-                            const data = {
-                                type: "keydown",
-                                time: performance.now() - start_time
-                            };
-                            console.log(data);
+                            const data = [
+                                "keydown",
+                                performance.now() - start_time
+                            ];
                             effort_dial.push(data);
                         }
-                    }
+                    },
+                    { signal: AbortSignal.timeout(tot_dur) }
                 );
-                space_keyup = document.addEventListener("keyup",
+                document.addEventListener("keyup",
                     (event: KeyboardEvent) => {
                         if (event.key == " ") {
-                            const data = {
-                                type: "keyup",
-                                time: performance.now() - start_time
-                            };
-                            console.log(data);
+                            const data = [
+                                "keyup",
+                                performance.now() - start_time
+                            ];
                             effort_dial.push(data);
                         }
-                    }
+                    },
+                    { signal: AbortSignal.timeout(tot_dur) }
                 );
             }
             // start animation
@@ -264,15 +262,13 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
         // called by clicking the next button
         const end_trial = () => {
-            // data saving
             // TODO: save selection timings
             var trial_data = {
                 selected_objects: selected,
-                selection_timings: "value",
-                effort_dial: effort_dial,
+                effort_dial_responses: effort_dial,
             };
-            console.log(effort_dial);
             display_element.innerHTML = "";
+            console.log(trial_data);
             // end trial
             this.jsPsych.finishTrial(trial_data);
         };

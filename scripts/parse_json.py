@@ -7,36 +7,31 @@ import numpy as np
 import polars as pl
 
 
-def init_dfs():
-    performance = pl.DataFrame(
-        schema={
-            "scene": pl.Int32,
-            "reversed": pl.Boolean,
-            "order": pl.Int32,
-            "td": pl.Float64,
-            "uid": pl.Int32,
-        }
-    )
-    effort_slider = pl.DataFrame(
-        schema={
-            "scene": pl.Int32,
-            "reversed": pl.Boolean,
-            "order": pl.Int32,
-            "effort": pl.Float64,
-            "uid": pl.Int32,
-        }
-    )
-    effort_dial = pl.DataFrame(
-        schema={
-            "scene": pl.Int32,
-            "reversed": pl.Boolean,
-            "order": pl.Int32,
-            "keydown": pl.Float64,
-            "keyup": pl.Float64,
-            "uid": pl.Int32,
-        }
-    )
-    return (performance, effort_slider, effort_dial)
+perf_schema = {
+    "scene": pl.Int32,
+    "reversed": pl.Boolean,
+    "order": pl.Int32,
+    "td": pl.Float64,
+    "uid": pl.Int32,
+}
+
+slider_schema = {
+    "scene": pl.Int32,
+    "reversed": pl.Boolean,
+    "order": pl.Int32,
+    "effort": pl.Float64,
+    "uid": pl.Int32,
+}
+
+
+dial_schema = {
+    "scene": pl.Int32,
+    "reversed": pl.Boolean,
+    "order": pl.Int32,
+    "keydown": pl.Float64,
+    "keyup": pl.Float64,
+    "uid": pl.Int32,
+}
 
 
 def parse_subj_data(timeline: dict, idx: int):
@@ -78,9 +73,16 @@ def parse_subj_data(timeline: dict, idx: int):
 
         if effort_presses is not None:
             for down, up in zip(effort_presses[0::2], effort_presses[1::2]):
-                effort_key["keydown"].append(float(down[1]))
-                effort_key["keyup"].append(float(up[1]))
-                effort_key["scene"].append(int(scene))
+                effort_key["keydown"].append(down[1])
+                effort_key["keyup"].append(up[1])
+                effort_key["scene"].append(scene)
+                effort_key["reversed"].append(reversed)
+                effort_key["order"].append(order)
+            # last is keydown
+            if (len(effort_presses) % 2) != 0:
+                effort_key["keydown"].append(effort_presses[-1])
+                effort_key["keyup"].append(10000.0)  # trial length
+                effort_key["scene"].append(scene)
                 effort_key["reversed"].append(reversed)
                 effort_key["order"].append(order)
 
@@ -88,37 +90,9 @@ def parse_subj_data(timeline: dict, idx: int):
     effort_slider["uid"] = idx
     effort_key["uid"] = idx
     return (
-        pl.DataFrame(
-            performance,
-            schema={
-                "scene": pl.Int32,
-                "reversed": pl.Boolean,
-                "order": pl.Int32,
-                "td": pl.Float64,
-                "uid": pl.Int32,
-            },
-        ),
-        pl.DataFrame(
-            effort_slider,
-            schema={
-                "scene": pl.Int32,
-                "reversed": pl.Boolean,
-                "order": pl.Int32,
-                "effort": pl.Float64,
-                "uid": pl.Int32,
-            },
-        ),
-        pl.DataFrame(
-            effort_key,
-            schema={
-                "scene": pl.Int32,
-                "reversed": pl.Boolean,
-                "order": pl.Int32,
-                "keydown": pl.Float64,
-                "keyup": pl.Float64,
-                "uid": pl.Int32,
-            },
-        ),
+        pl.DataFrame(performance, schema=perf_schema),
+        pl.DataFrame(effort_slider, schema=slider_schema),
+        pl.DataFrame(effort_key, schema=dial_schema),
     )
 
 
@@ -134,11 +108,11 @@ def main():
         for subj in f:
             raw.append(json.loads(subj))
 
-    performance, effort_slider, effort_dial = init_dfs()
+    performance = pl.DataFrame(schema=perf_schema)
+    effort_slider = pl.DataFrame(schema=slider_schema)
+    effort_dial = pl.DataFrame(schema=dial_schema)
     for idx, subj in enumerate(raw):
         (p, s, k) = parse_subj_data(subj, idx)
-        print(performance)
-        print(p)
         performance.vstack(p, in_place=True)
         effort_slider.vstack(s, in_place=True)
         effort_dial.vstack(k, in_place=True)
