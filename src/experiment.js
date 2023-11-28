@@ -21,7 +21,7 @@ import HTMLSliderResponsePlugin from "@jspsych/plugin-html-slider-response";
 import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 // Prolific variables
-const PROLIFIC_URL = 'https://app.prolific.co/submissions/complete?cc=782B6DAB';
+const PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=CVJWVV8A';
 // Trials
 import examples from '../assets/examples.json';
 import dataset from '../assets/dataset.json';
@@ -29,17 +29,17 @@ import trial_list from '../assets/trial_list.json';
 
 // Define global experiment variables
 // REVIEW: add more examples?
-const EXAMPLE_TRIAL = examples[0].positions
+const EXAMPLE_TRIAL = examples[0].positions;
 const N_TRIALS = trial_list.length;
-const TIME_PER_TRIAL = dataset[0].positions.length / 24;
-var EXP_DURATION = 20 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
+// const TIME_PER_TRIAL = dataset[0].positions.length / 24;
+var EXP_DURATION = 15 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
 const MOT_DIM = 600; // pixels
-const STIM_DEG = 10;
-const PIXELS_PER_UNIT = MOT_DIM / STIM_DEG;
+// const STIM_DEG = 10;
+// const PIXELS_ER_UNIT = MOT_DIM / STIM_DEG;
 var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
-const SKIP_PROLIFIC_ID = true;
-const SKIP_INSTRUCTIONS = true;
+const SKIP_PROLIFIC_ID = false;
+const SKIP_INSTRUCTIONS = false;
 
 
 function gen_trial(jspsych,
@@ -54,13 +54,16 @@ function gen_trial(jspsych,
     if (reverse) {
         positions = positions.toReversed();
     }
+
+    const display_size = MOT_DIM * CHINREST_SCALE;
+
     const tracking = {
         type: MOTPlugin,
         scene: JSON.stringify(positions),
         targets: 4,
         object_class: "mot-distractor",
         target_class: "mot-target",
-        display_size: MOT_DIM * CHINREST_SCALE,
+        display_size: display_size,
         target_designation: targets,
         effort_dial: effort_dial,
         world_scale: 800.0, // legacy datasets are +- 400 units
@@ -72,9 +75,8 @@ function gen_trial(jspsych,
     if (effort_slider) {
         sub_tl.push({
             type: HTMLSliderResponsePlugin,
-            stimulus: `<div style="width:500px;">
-        <p>How effortful was tracking?</p>
-        </div>`,
+            stimulus: `<div style="width:${display_size}px;">` +
+                `<p>How effortful was tracking?</p></div>`,
             require_movement: true,
             labels: ['None', 'Somewhat', 'A lot']
         });
@@ -99,7 +101,18 @@ function gen_trial(jspsych,
  * @type {import("jspsych-builder").RunFunction}
  */
 export async function run({ assetPaths, input = {}, environment, title, version }) {
-    const jsPsych = initJsPsych();
+
+    const jsPsych = initJsPsych({
+        show_progress_bar: true,
+        on_finish: () => {
+            if (typeof jatos !== 'undefined') {
+                // in jatos environment
+                jatos.endStudyAndRedirect(PROLIFIC_URL, jsPsych.data.get().json());
+            } else {
+                return jsPsych;
+            };
+        }
+    });
 
     const timeline = [];
 
@@ -233,6 +246,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         pages: [
             `If while tracking the moving objects, you feel a sense of effort maintaining the target set,` +
             ` please press and hold the <b>SPACEBAR</b> for the duration that you experience the sense of effort.  <br>` +
+            `You will not receive feedback from pressing the <b>SPACEBAR</b>. This is intentional<br>` +
             `Additionally, at then end of the trial, please use the presented slider to report the overall amount of ` +
             `effort you experienced for that trial.`,
 
@@ -334,6 +348,27 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         const positions = dataset[tid].positions;
         timeline.push(gen_trial(jsPsych, tid, positions, reverse));
     };
+
+
+    // debriefing
+    timeline.push({
+        type: SurveyTextPlugin,
+        preamble: `<h2><b>Thank you for helping us with our study! ` +
+            `This study was designed to be difficult and we value your responses. </b></h2><br><br> ` +
+            `Please fill out the (optional) survey below and click <b>Done</b> to complete the experiment. <br> `,
+        questions: [
+            {
+                prompt: 'Did you find yourself using any strategies while performing the task?',
+                name: 'Strategy', rows: 5, placeholder: 'None'
+            },
+
+            {
+                prompt: "Are there any additional comments you'd like to add? ",
+                name: 'General', rows: 5, placeholder: 'None'
+            }
+        ],
+        button_label: 'Done'
+    });
 
     await jsPsych.run(timeline);
 
