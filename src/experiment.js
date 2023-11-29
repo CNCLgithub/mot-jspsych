@@ -214,7 +214,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
             "objects highlighted in <span style='color:blue'>BLUE</span> " +
             `designating them as <span style="color:blue;"><b>targets</b></span>.<br>` +
             "Shortly after, the <span style='color:blue'>BLUE</span> indication will " +
-            "dissapear and the objects will begin to move.<br>" +
+            "disappear and the objects will begin to move.<br>" +
             "Your main task is to keep track of the targets as they move.<br>" +
             "Click <b>Next</b> to see an example of a dynamic scene with targets.",
         ],
