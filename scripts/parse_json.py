@@ -58,6 +58,8 @@ def parse_subj_data(timeline: dict, idx: int):
         if scene is None:
             continue
 
+        print(exp_trial)
+
         if target_designations is not None:
             td = np.mean(target_designations[:4])
             performance["td"].append(td)
@@ -80,7 +82,8 @@ def parse_subj_data(timeline: dict, idx: int):
                 effort_key["order"].append(order)
             # last is keydown
             if (len(effort_presses) % 2) != 0:
-                effort_key["keydown"].append(effort_presses[-1])
+                (_, down_rt) = effort_presses[-1]
+                effort_key["keydown"].append(down_rt)
                 effort_key["keyup"].append(10000.0)  # trial length
                 effort_key["scene"].append(scene)
                 effort_key["reversed"].append(reversed)
