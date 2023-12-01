@@ -28,10 +28,51 @@ dial_schema = {
     "scene": pl.Int32,
     "reversed": pl.Boolean,
     "order": pl.Int32,
-    "keydown": pl.Float64,
-    "keyup": pl.Float64,
+    "rt": pl.Float32,
+    "scale": pl.Float32,
     "uid": pl.Int32,
 }
+
+
+def interpolate_dial(movements, poll: int = 24, fps: int = 24, frames: int = 360):
+    dt = 1000.0 / poll  # ms
+    dur = 1000.0 * frames / fps  # total trial duration in ms
+    steps = int(np.ceil(poll * frames / fps))  # total poll steps
+    ts = np.linspace(0.0, dur, num=steps, dtype=np.float32)
+    xp, yp = zip(*movements)
+    xp = np.asarray(xp)
+    yp = np.asarray(yp)
+    ys = np.interp(ts, xp, yp)
+
+    buffer = np.zeros(steps, dtype=np.float32)
+    # assume first movement backtracks to t = 0
+    (rt, scale) = movements[0]
+    stop_idx = int(np.floor(rt / dt))
+    buffer[:stop_idx] = scale
+    print(stop_idx)
+    print(buffer[:stop_idx])
+
+    # middle frames
+    for mframe in np.arange(1, len(movements)):
+        (lrt, lscale) = movements[mframe - 1]
+        (rrt, rscale) = movements[mframe]
+        dy = rscale - lscale
+        dx = rrt - lrt
+        slope = dy / dx
+        ialpha = int(np.floor(lrt / dt))
+        iomega = int(np.floor(rrt / dt))
+        ddx = dx / max(iomega - ialpha, 1.0)
+        print((ialpha, iomega))
+        print(ddx)
+        x = 0.0
+        for idx in range(ialpha, iomega):
+            buffer[idx] = x * slope + lscale
+            x += ddx
+    # last frames
+    (rt, scale) = movements[-1]
+    buffer[(int(np.floor(rt / dt))) :] = scale
+
+    return (rts, buffer)
 
 
 def parse_subj_data(timeline: dict, idx: int):
@@ -43,9 +84,9 @@ def parse_subj_data(timeline: dict, idx: int):
             break
 
     timeline = timeline[exp_start:-1]  # last step is the exit page
-    performance = {"scene": [], "reversed": [], "order": [], "td": []}
-    effort_key = {"scene": [], "reversed": [], "order": [], "keydown": [], "keyup": []}
-    effort_slider = {"scene": [], "reversed": [], "order": [], "effort": []}
+    performance = {k: [] for k in perf_schema.keys()}
+    slider = {k: [] for k in slider_schema.keys()}
+    dial = {k: [] for k in dial_schema.keys()}
 
     for exp_trial in timeline:
         scene = exp_trial.get("trial_id", None)
@@ -58,8 +99,6 @@ def parse_subj_data(timeline: dict, idx: int):
         if scene is None:
             continue
 
-        print(exp_trial)
-
         if target_designations is not None:
             td = np.mean(target_designations[:4])
             performance["td"].append(td)
@@ -68,34 +107,28 @@ def parse_subj_data(timeline: dict, idx: int):
             performance["order"].append(order)
 
         if effort_rating is not None:
-            effort_slider["effort"].append(effort_rating)
-            effort_slider["scene"].append(scene)
-            effort_slider["reversed"].append(reversed)
-            effort_slider["order"].append(order)
+            slider["effort"].append(effort_rating)
+            slider["scene"].append(scene)
+            slider["reversed"].append(reversed)
+            slider["order"].append(order)
 
         if effort_presses is not None:
-            for down, up in zip(effort_presses[0::2], effort_presses[1::2]):
-                effort_key["keydown"].append(down[1])
-                effort_key["keyup"].append(up[1])
-                effort_key["scene"].append(scene)
-                effort_key["reversed"].append(reversed)
-                effort_key["order"].append(order)
-            # last is keydown
-            if (len(effort_presses) % 2) != 0:
-                (_, down_rt) = effort_presses[-1]
-                effort_key["keydown"].append(down_rt)
-                effort_key["keyup"].append(10000.0)  # trial length
-                effort_key["scene"].append(scene)
-                effort_key["reversed"].append(reversed)
-                effort_key["order"].append(order)
+            if len(effort_presses) > 0:
+                rts, scales = interpolate_dial(effort_presses)
+                for rt, scale in zip(rts, scales):
+                    dial["scene"].append(scene)
+                    dial["reversed"].append(reversed)
+                    dial["order"].append(order)
+                    dial["rt"].append(rt)
+                    dial["scale"].append(scale)
 
     performance["uid"] = idx
-    effort_slider["uid"] = idx
-    effort_key["uid"] = idx
+    slider["uid"] = idx
+    dial["uid"] = idx
     return (
         pl.DataFrame(performance, schema=perf_schema),
-        pl.DataFrame(effort_slider, schema=slider_schema),
-        pl.DataFrame(effort_key, schema=dial_schema),
+        pl.DataFrame(slider, schema=slider_schema),
+        pl.DataFrame(dial, schema=dial_schema),
     )
 
 
