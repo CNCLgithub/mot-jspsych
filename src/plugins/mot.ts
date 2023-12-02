@@ -88,7 +88,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         const obj_elems = Array<HTMLElement>(n_objects);
         const selected = Array<Boolean>(n_objects);
         let mot_prompt: HTMLElement;
-        const effort_dial: Array<Float32Array<2>> = [];
+        const effort_dial = [];
         let start_time: number = 0.0;
         const tot_dur = trial.step_dur * state.length;
         const world_to_display = trial.display_size / trial.world_scale;
@@ -207,31 +207,8 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             start_time = performance.now();
             // add effort dial
             if (trial.effort_dial) {
-                const real = new Float32Array(2);
-                const imag = new Float32Array(2);
-                real[0] = 0.05;
-                imag[0] = 0.1;
-                real[1] = 0.75;
-                imag[1] = 0.2;
-                const wave = audioCtx.createPeriodicWave(real, imag, { disableNormalization: true });
-
-                // oscillator.type = "custom";
-                oscillator.setPeriodicWave(wave);
-
-                // oscillator.type = "sine";
-
-                oscillator.frequency.value = 300.0;
-                // oscillator.connect(audioCtx.destination);
-                oscillator.connect(gain).connect(audioCtx.destination);
-                gain.gain.value = 0.8;
-                gain.gain.setValueAtTime(1, audioCtx.currentTime);
-                const stopTime = audioCtx.currentTime + (tot_dur / 1000.0);
-                gain.gain.setTargetAtTime(0, stopTime - 0.100, .025);
-                oscillator.start();
-                // Get new mouse pointer coordinates when mouse is moved
-                // then set new gain and pitch values
+                configure_effort_dial();
                 document.addEventListener("mousemove", update_effort_dial);
-
             }
             // start animation
             tl.play();
@@ -294,16 +271,38 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             // btn_el.style.display = "none";
         };
 
+        const configure_effort_dial = () => {
+            // wave oscillator
+            const real = new Float32Array(2);
+            const imag = new Float32Array(2);
+            real[0] = 0.05;
+            imag[0] = 0.1;
+            real[1] = 0.75;
+            imag[1] = 0.2;
+            const wave = audioCtx.createPeriodicWave(real, imag,
+                { disableNormalization: true });
+            oscillator.setPeriodicWave(wave);
+            // oscillator.frequency.value = 300.0; // defaul freq
+            oscillator.connect(gain).connect(audioCtx.destination);
+            // Gain settings to prevent clicking
+            gain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+            gain.gain.setTargetAtTime(0.5, audioCtx.currentTime + 0.02, 0.01);
+            const stopTime = audioCtx.currentTime + (tot_dur / 1000.0);
+            gain.gain.setTargetAtTime(0, stopTime - 0.100, .025);
+            oscillator.start();
+        };
 
+        // const update_mouse_pos = (e: MouseEvent) => {
+        //     mouse_y = e.pageY;
+        // };
+        //
         const update_effort_dial = (e: MouseEvent) => {
             const dial_value: number = (e.pageX / screen_width).clamp(0.0, 1.0)
             const freq: number = dial_value * 400.0 + 200.00
             const dt = performance.now() - start_time;
             oscillator.frequency.value = freq;
             if (dt > 0.0 && dt % 10 == 0) {
-                const data = new Float32Array(2);
-                data[0] = dt;
-                data[1] = dial_value;
+                const data = [dt, dial_value];
                 effort_dial.push(data);
             }
         };

@@ -34,45 +34,15 @@ dial_schema = {
 }
 
 
-def interpolate_dial(movements, poll: int = 24, fps: int = 24, frames: int = 360):
-    dt = 1000.0 / poll  # ms
+def interpolate_dial(movements, poll: int = 20, fps: int = 24, frames: int = 360):
     dur = 1000.0 * frames / fps  # total trial duration in ms
     steps = int(np.ceil(poll * frames / fps))  # total poll steps
     ts = np.linspace(0.0, dur, num=steps, dtype=np.float32)
     xp, yp = zip(*movements)
-    xp = np.asarray(xp)
-    yp = np.asarray(yp)
+    xp = np.asarray(xp, dtype=np.float32)
+    yp = np.asarray(yp, dtype=np.float32)
     ys = np.interp(ts, xp, yp)
-
-    buffer = np.zeros(steps, dtype=np.float32)
-    # assume first movement backtracks to t = 0
-    (rt, scale) = movements[0]
-    stop_idx = int(np.floor(rt / dt))
-    buffer[:stop_idx] = scale
-    print(stop_idx)
-    print(buffer[:stop_idx])
-
-    # middle frames
-    for mframe in np.arange(1, len(movements)):
-        (lrt, lscale) = movements[mframe - 1]
-        (rrt, rscale) = movements[mframe]
-        dy = rscale - lscale
-        dx = rrt - lrt
-        slope = dy / dx
-        ialpha = int(np.floor(lrt / dt))
-        iomega = int(np.floor(rrt / dt))
-        ddx = dx / max(iomega - ialpha, 1.0)
-        print((ialpha, iomega))
-        print(ddx)
-        x = 0.0
-        for idx in range(ialpha, iomega):
-            buffer[idx] = x * slope + lscale
-            x += ddx
-    # last frames
-    (rt, scale) = movements[-1]
-    buffer[(int(np.floor(rt / dt))) :] = scale
-
-    return (rts, buffer)
+    return (ts, ys)
 
 
 def parse_subj_data(timeline: dict, idx: int):

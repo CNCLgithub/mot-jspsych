@@ -1,7 +1,7 @@
 /**
  * @title object tracking
  * @description Track moving targets
- * @version 0.1.1
+ * @version 0.1.2
  *
  * @assets assets/
  */
@@ -246,15 +246,43 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     instruct_tl.push({
         type: InstructionsPlugin,
         pages: [
-            `If while tracking the moving objects, you feel a sense of effort maintaining the target set,` +
-            ` please press and hold the <b>SPACEBAR</b> for the duration that you experience the sense of effort.  <br>` +
-            `You will not receive feedback from pressing the <b>SPACEBAR</b>. This is intentional<br>` +
-            `Additionally, at then end of the trial, please use the presented slider to report the overall amount of ` +
-            `effort you experienced for that trial.`,
+            "<span style='overflow-wrap:anywhere'>Sometimes, this tracking task may seem relatively easy, and you may find that you can do " +
+            " it without much effort at all – e.g. when all of the targets just happen to be off" +
+            " by themselves.  But other times, it might seem much more difficult and effortful " +
+            "– e.g. when a target and a non-target item get very close to each other. <br>  " +
+            "We want to get a sense of how effortful the tracking task is for you, on a " +
+            "moment-by-moment basis, and you’ll tell us this by moving your computer mouse " +
+            "around while you’re tracking the targets. </span> ",
 
-            `Remember, the <i>main task</i> is to correctly identify the <span style="color:blue"><b>4 targets</b></span>.<br>` +
-            `The secondary task is to press <b>SPACEBAR</b> whenever you feel a sense of effort while tracking ` +
-            `and to report the overall amount of effort at the end of the trial.<br>` +
+            "<span style='overflow-wrap:anywhere'> Whenever you find tracking to be especially effortful, you should move your mouse to the right" +
+            " – far to the right for especially effortful moments, and only a bit to the right for moments that" +
+            " are only mildly effortful.  And similarly, whenever you find tracking to be especially easy," +
+            " you should move your mouse to the left – far to the left for especially easy moments, and only " +
+            "a bit to the left for moments that are only mildly easy. </span><br>" +
+            "You do not need to move the slider from one end of the screen to the other. " +
+            "Use whatever range of motion is comfortable to you. But, please make sure to keep the range consistent across examples –  " +
+            "e.g. If a moment in tracking is especially effortful, try to be consistent with how far to the right you move your mouse. </span>" +
+            "Click <b>Next</b> to practice; Please adjust your computer's volume so that the hum is comfortable.",
+        ],
+        show_clickable_nav: true,
+        // show_page_number: true,
+        page_label: "<b>Instructions</b>",
+        allow_backward: false,
+    });
+
+    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false, true, true, false));
+
+    instruct_tl.push({
+        type: InstructionsPlugin,
+        pages: [
+            "<span style='overflow-wrap:anywhere'>In addition to your moment-by-moment sense of effort, we also want to get a sense " +
+            " from you of how effortful each tracking example is overall. <br>" +
+            "After you have indicated which objects you believe are targets, you can record your overall experience of effort on the provided slider." +
+            " You can move the slider anywhere between the two extremes. " +
+            "If that was an especially effortful example, you should move the slider " +
+            " far to the right.  If it was an especially easy example, " +
+            "you should move the slider far to the left.  And in general, " +
+            "you should just try to place the slider to match the overall sense of effort involved</span><br>" +
             "Click <b>Next</b> to practice.",
         ],
         show_clickable_nav: true,
@@ -265,7 +293,18 @@ export async function run({ assetPaths, input = {}, environment, title, version 
 
     instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false));
 
-
+    instruct_tl.push({
+        type: InstructionsPlugin,
+        pages: [
+            "<span style='overflow-wrap:anywhere'>Remember, the main task is to correctly identify the " +
+            "4 targets. The secondary task is to move the slider to indicate your moment-by-moment sense of effort</span><br>" +
+            "Click <b>Next</b> to continue.",
+        ],
+        show_clickable_nav: true,
+        // show_page_number: true,
+        page_label: "<b>Instructions</b>",
+        allow_backward: false,
+    });
     // comprehension check
     const comp_check = {
         type: SurveyMultiChoicePlugin,
@@ -278,7 +317,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
             options: [
                 "A) Before motion, targets are indicated in black",
                 "B) The main task is to indicate which objects are targets",
-                "C) Objects will disspear throughout the motion phase",
+                "C) Objects will disappear throughout the motion phase",
             ],
             required: true
         },
@@ -288,7 +327,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
             options: [
                 "A) The secondary task is to indicate your sense of effort while tracking",
                 "B) You should maintain an arm-length distance from your monitor",
-                "C) The objects on the screen remain stationary"
+                "C) You should move the slider to the left if tracking is effortful"
             ],
             required: true
         },
@@ -345,8 +384,8 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     };
 
     // add exp trials with random shuffle, unique per session
-    // for (const trial of jsPsych.randomization.shuffle(trial_list)) {
-    for (const trial of trial_list) {
+    for (const trial of jsPsych.randomization.shuffle(trial_list)) {
+        // for (const trial of trial_list) {
         const [tid, reverse] = trial.slice(0, 2);
         const positions = dataset[tid - 1].positions;
         timeline.push(gen_trial(jsPsych, tid, positions, reverse));
