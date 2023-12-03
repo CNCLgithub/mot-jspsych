@@ -91,6 +91,10 @@ def parse_subj_data(timeline: dict, idx: int):
                     dial["order"].append(order)
                     dial["rt"].append(rt)
                     dial["scale"].append(scale)
+            else:
+                print(
+                    f"Could not retrieve dials responses for (subj, trial) {idx}, {scene}"
+                )
 
     performance["uid"] = idx
     slider["uid"] = idx

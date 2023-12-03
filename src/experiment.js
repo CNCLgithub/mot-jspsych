@@ -1,7 +1,7 @@
 /**
  * @title object tracking
  * @description Track moving targets
- * @version 0.1.2
+ * @version 0.1.3
  *
  * @assets assets/
  */

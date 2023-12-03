@@ -254,7 +254,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
                 effort_dial_responses: effort_dial,
             };
             display_element.innerHTML = "";
-            console.log(trial_data);
+            // console.log(trial_data);
             // end trial
             this.jsPsych.finishTrial(trial_data);
         };
@@ -301,10 +301,8 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             const freq: number = dial_value * 400.0 + 200.00
             const dt = performance.now() - start_time;
             oscillator.frequency.value = freq;
-            if (dt > 0.0 && dt % 10 == 0) {
-                const data = [dt, dial_value];
-                effort_dial.push(data);
-            }
+            const data = [dt, dial_value];
+            effort_dial.push(data);
         };
     }
 
