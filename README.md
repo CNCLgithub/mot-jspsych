@@ -1,19 +1,29 @@
-# mot-jspsych
+# Multiple object tracking
 
-Work in progress. Eventually, the `mot` plugin will be published independently. 
+This repo contains the jsPsych implementation of Pylyshyn's Multiple Object Tracking paradigm.
+There are several additional extensions such as ...
+
+The main logic is defined under `src/experiment.js` and the plugin `plugin/mot.ts`.
+
+>NOTE: This is a work in progress! API subject to change
 
 ## Setup
 
-This project uses [jspsych-builder](https://github.com/bjoluc/jspsych-builder)
+Using the [jspsych builder](https://github.com/bjoluc/jspsych-builder) tool, all that's needed to get running is to run
 
-To develop on a local server, run
+1. `npm install` to install all node dependencies
+2. `npm start` to build and run a local server package the experiment as a static website for [JATOS](https://www.jatos.org/)
 
-```bash
-npm start
-```
+<!-- TODO: add wget script to download stimuli into `assets` -->
 
-To package for [JATOS](https://www.jatos.org/), run
+## Deployment
 
-```bash
-npm run jatos
-```
+Two options
+
+1. `npm run jatos` to package the experiment as a static website for [JATOS](https://www.jatos.org/)
+
+or 
+
+2. `npm run build` to package the experiment as a static website for independent management. 
+
+> Note that option 2 would require modification in order to store subject responses
