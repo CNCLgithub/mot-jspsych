@@ -25,9 +25,21 @@ const info = <const>{
             type: ParameterType.STRING,
             description: "The css class describing target appearance.",
         },
-        display_size: {
+        display_height: {
             type: ParameterType.INT,
-            description: "The size in pixels of the (square) display.",
+            description: "The display height in pixels.",
+        },
+        display_width: {
+            type: ParameterType.INT,
+            description: "The display width in pixels",
+        },
+        flip_height: {
+            type: ParameterType.BOOL,
+            description: "Flip the y coordinates.",
+        },
+        flip_width: {
+            type: ParameterType.BOOL,
+            description: "Flip the x coordinates.",
         },
         step_dur: {
             type: ParameterType.FLOAT,
@@ -91,8 +103,10 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         const effort_dial = [];
         let start_time: number = 0.0;
         const tot_dur = trial.step_dur * state.length;
-        const world_to_display = trial.display_size / trial.world_scale;
-        const obj_dim = 40.0 * world_to_display;
+        // pixels per world unit
+        const world_to_display = trial.display_width / trial.world_scale;
+        // assuming objects are 40 units -> how many pixels
+        const obj_dim = 40.0 * world_to_display; // REVIEW
         const screen_width = document.getElementsByTagName('body')[0].offsetWidth;
         // audio for effort dial
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -102,7 +116,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         // ELEMENTS
         let mot_el = document.createElement("div");
         mot_el.className = "mot-div";
-        mot_el.style = `width:${trial.display_size}px;height:${trial.display_size}px`;
+        mot_el.style = `width:${trial.display_width}px;height:${trial.display_height}px`;
         display_element.appendChild(mot_el);
 
         // mot prompt
@@ -142,14 +156,16 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
         const t_pos = (xy: Array<number>) => {
             let [x, y] = xy;
-            // from center coordinates to div top-left corner
-            let tx = x * world_to_display; // -400 -> -250px
-            // adjust by object radius
-            tx *= 0.95 // if ds = 500px, range from [-230, +230]
-            // from center coordinates to div top-left corner
-            let ty = (-(y / trial.world_scale) + 0.5) * (trial.display_size);
-            // adjust by object radius
-            ty *= 0.95 // if ds = 500px, range from [0, 460]
+            if (trial.flip_width) {
+                x = -x;
+            }
+            if (trial.flip_height) {
+                y = -y;
+            }
+            // x is already the same space (+-0)
+            let tx = x;
+            // y goes from ([-dy, +dy]) -> ([0, 2dy])
+            let ty = -y + (0.5 * (trial.display_height - obj_dim));
             return ([tx, ty]);
         };
 

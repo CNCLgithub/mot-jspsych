@@ -33,15 +33,16 @@ const EXAMPLE_TRIAL = examples[0].positions;
 const N_TRIALS = trial_list.length;
 // const TIME_PER_TRIAL = dataset[0].positions.length / 24;
 var EXP_DURATION = 15 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
-const MOT_DIM = 600; // pixels
+const MOT_WIDTH = 720; // pixels
+const MOT_HEIGHT = 480; // pixels
 // const STIM_DEG = 10;
 // const PIXELS_ER_UNIT = MOT_DIM / STIM_DEG;
 var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
-const SKIP_PROLIFIC_ID = false;
-const SKIP_INSTRUCTIONS = false;
-// const SKIP_PROLIFIC_ID = true;
-// const SKIP_INSTRUCTIONS = true;
+// const SKIP_PROLIFIC_ID = false;
+// const SKIP_INSTRUCTIONS = false;
+const SKIP_PROLIFIC_ID = true;
+const SKIP_INSTRUCTIONS = true;
 
 
 function gen_trial(jspsych,
@@ -57,7 +58,8 @@ function gen_trial(jspsych,
         positions = positions.toReversed();
     }
 
-    const display_size = MOT_DIM * CHINREST_SCALE;
+    const display_width = MOT_WIDTH * CHINREST_SCALE;
+    const display_height = MOT_HEIGHT * CHINREST_SCALE;
 
     const tracking = {
         type: MOTPlugin,
@@ -65,10 +67,13 @@ function gen_trial(jspsych,
         targets: 4,
         object_class: "mot-distractor",
         target_class: "mot-target",
-        display_size: display_size,
+        display_width: display_width,
+        display_height: display_height,
+        flip_height: jspsych.randomization.sampleBernoulli(0.5),
+        flip_width: jspsych.randomization.sampleBernoulli(0.5),
         target_designation: targets,
         effort_dial: effort_dial,
-        world_scale: 800.0, // legacy datasets are +- 400 units
+        world_scale: 720.0, // legacy datasets are +- 400 units
         premotion_dur: 4000.0,
     };
 
@@ -77,7 +82,7 @@ function gen_trial(jspsych,
     if (effort_slider) {
         sub_tl.push({
             type: HTMLSliderResponsePlugin,
-            stimulus: `<div style="width:${display_size}px;">` +
+            stimulus: `<div style="width:${display_width}px;">` +
                 `<p>How effortful was tracking?</p></div>`,
             require_movement: true,
             labels: ['None', 'Somewhat', 'A lot']
@@ -384,7 +389,8 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     };
 
     // add exp trials with random shuffle, unique per session
-    for (const trial of jsPsych.randomization.shuffle(trial_list)) {
+    // for (const trial of jsPsych.randomization.shuffle(trial_list)) {
+    for (const trial of trial_list) {
         // for (const trial of trial_list) {
         const [tid, reverse] = trial.slice(0, 2);
         const positions = dataset[tid - 1].positions;
