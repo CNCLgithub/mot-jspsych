@@ -1,7 +1,7 @@
 /**
- * @title object tracking
+ * @title Multiple Object Tracking
  * @description Track moving targets
- * @version 0.1.3
+ * @version 0.5.0
  *
  * @assets assets/
  */
@@ -29,7 +29,9 @@ import trial_list from '../assets/trial_list.json';
 
 // Define global experiment variables
 // REVIEW: add more examples?
-const EXAMPLE_TRIAL = examples[0].positions;
+const HARD_EXAMPLE = examples[4].positions;
+const EASY_EXAMPLE = examples[1].positions;
+const MIX_EXAMPLE = examples[6].positions;
 const N_TRIALS = trial_list.length;
 // const TIME_PER_TRIAL = dataset[0].positions.length / 24;
 var EXP_DURATION = 15 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
@@ -39,10 +41,10 @@ const MOT_HEIGHT = 480; // pixels
 // const PIXELS_ER_UNIT = MOT_DIM / STIM_DEG;
 var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
-// const SKIP_PROLIFIC_ID = false;
-// const SKIP_INSTRUCTIONS = false;
-const SKIP_PROLIFIC_ID = true;
-const SKIP_INSTRUCTIONS = true;
+const SKIP_PROLIFIC_ID = false;
+const SKIP_INSTRUCTIONS = false;
+// const SKIP_PROLIFIC_ID = true;
+// const SKIP_INSTRUCTIONS = true;
 
 
 function gen_trial(jspsych,
@@ -229,7 +231,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false, false, false, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EASY_EXAMPLE, false, false, false, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
@@ -246,14 +248,14 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false, true, false, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EASY_EXAMPLE, false, true, false, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
         pages: [
             "<span style='overflow-wrap:anywhere'>Sometimes, this tracking task may seem relatively easy, and you may find that you can do " +
             " it without much effort at all – e.g. when all of the targets just happen to be off" +
-            " by themselves.  But other times, it might seem much more difficult and effortful " +
+            " by themselves.<br>But other times, it might seem much more difficult and effortful " +
             "– e.g. when a target and a non-target item get very close to each other. <br>  " +
             "We want to get a sense of how effortful the tracking task is for you, on a " +
             "moment-by-moment basis, and you’ll tell us this by moving your computer mouse " +
@@ -261,13 +263,13 @@ export async function run({ assetPaths, input = {}, environment, title, version 
 
             "<span style='overflow-wrap:anywhere'> Whenever you find tracking to be especially effortful, you should move your mouse to the right" +
             " – far to the right for especially effortful moments, and only a bit to the right for moments that" +
-            " are only mildly effortful.  And similarly, whenever you find tracking to be especially easy," +
+            " are only mildly effortful.<br>And similarly, whenever you find tracking to be especially easy," +
             " you should move your mouse to the left – far to the left for especially easy moments, and only " +
             "a bit to the left for moments that are only mildly easy. </span><br>" +
             "You do not need to move the slider from one end of the screen to the other. " +
             "Use whatever range of motion is comfortable to you. But, please make sure to keep the range consistent across examples –  " +
             "e.g. If a moment in tracking is especially effortful, try to be consistent with how far to the right you move your mouse. </span>" +
-            "Click <b>Next</b> to practice; Please adjust your computer's volume so that the hum is comfortable.",
+            "<br>Click <b>Next</b> to practice; Please adjust your computer's volume so that the hum is comfortable.",
         ],
         show_clickable_nav: true,
         // show_page_number: true,
@@ -275,7 +277,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false, true, true, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, MIX_EXAMPLE, false, true, true, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
@@ -283,9 +285,9 @@ export async function run({ assetPaths, input = {}, environment, title, version 
             "<span style='overflow-wrap:anywhere'>In addition to your moment-by-moment sense of effort, we also want to get a sense " +
             " from you of how effortful each tracking example is overall. <br>" +
             "After you have indicated which objects you believe are targets, you can record your overall experience of effort on the provided slider." +
-            " You can move the slider anywhere between the two extremes. " +
+            " You can move the slider anywhere between the two extremes.<br>" +
             "If that was an especially effortful example, you should move the slider " +
-            " far to the right.  If it was an especially easy example, " +
+            " far to the right.<br>If it was an especially easy example, " +
             "you should move the slider far to the left.  And in general, " +
             "you should just try to place the slider to match the overall sense of effort involved</span><br>" +
             "Click <b>Next</b> to practice.",
@@ -296,13 +298,13 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE_TRIAL, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, HARD_EXAMPLE, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
         pages: [
             "<span style='overflow-wrap:anywhere'>Remember, the main task is to correctly identify the " +
-            "4 targets. The secondary task is to move the slider to indicate your moment-by-moment sense of effort</span><br>" +
+            "4 targets.<br>The secondary task is to move the slider to indicate your moment-by-moment sense of effort</span><br>" +
             "Click <b>Next</b> to continue.",
         ],
         show_clickable_nav: true,
@@ -389,8 +391,8 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     };
 
     // add exp trials with random shuffle, unique per session
-    // for (const trial of jsPsych.randomization.shuffle(trial_list)) {
-    for (const trial of trial_list) {
+    for (const trial of jsPsych.randomization.shuffle(trial_list)) {
+    // for (const trial of trial_list) {
         // for (const trial of trial_list) {
         const [tid, reverse] = trial.slice(0, 2);
         const positions = dataset[tid - 1].positions;
