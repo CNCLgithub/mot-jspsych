@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version 0.5.0
+ * @version 0.5.1
  *
  * @assets assets/
  */
@@ -29,9 +29,9 @@ import trial_list from '../assets/trial_list.json';
 
 // Define global experiment variables
 // REVIEW: add more examples?
-const HARD_EXAMPLE = examples[4].positions;
+const HARD_EXAMPLE = examples[0].positions;
 const EASY_EXAMPLE = examples[1].positions;
-const MIX_EXAMPLE = examples[6].positions;
+const MIX_EXAMPLE = examples[2].positions;
 const N_TRIALS = trial_list.length;
 // const TIME_PER_TRIAL = dataset[0].positions.length / 24;
 var EXP_DURATION = 15 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
@@ -393,7 +393,6 @@ export async function run({ assetPaths, input = {}, environment, title, version 
     // add exp trials with random shuffle, unique per session
     for (const trial of jsPsych.randomization.shuffle(trial_list)) {
     // for (const trial of trial_list) {
-        // for (const trial of trial_list) {
         const [tid, reverse] = trial.slice(0, 2);
         const positions = dataset[tid - 1].positions;
         timeline.push(gen_trial(jsPsych, tid, positions, reverse));
