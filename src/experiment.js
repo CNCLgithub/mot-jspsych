@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version colonoscopy-0.3
+ * @version study2-preregistered
  *
  * @assets assets/
  */
@@ -21,7 +21,7 @@ import HTMLSliderResponsePlugin from "@jspsych/plugin-html-slider-response";
 import MOTPlugin from "./plugins/mot.ts";
 import { initJsPsych } from "jspsych";
 // Prolific variables
-const PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=CVJWVV8A';
+const PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=C1AE31ZY';
 // Trials
 import examples from '../assets/examples.json';
 import dataset from '../assets/dataset.json';
@@ -32,7 +32,6 @@ import trial_list from '../assets/trial_list.json';
 const EXAMPLE1 = examples[0].positions;
 const EXAMPLE2 = examples[1].positions;
 const EXAMPLE3 = examples[2].positions;
-// const EXAMPLE4 = examples[3].positions;
 const N_TRIALS = trial_list.length;
 // const TIME_PER_TRIAL = dataset[0].positions.length / 24;
 var EXP_DURATION = 20 //  in minutes
