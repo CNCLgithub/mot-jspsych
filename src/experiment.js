@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version 0.5.1
+ * @version colonoscopy-0.3
  *
  * @assets assets/
  */
@@ -29,12 +29,13 @@ import trial_list from '../assets/trial_list.json';
 
 // Define global experiment variables
 // REVIEW: add more examples?
-const HARD_EXAMPLE = examples[0].positions;
-const EASY_EXAMPLE = examples[1].positions;
-const MIX_EXAMPLE = examples[2].positions;
+const EXAMPLE1 = examples[0].positions;
+const EXAMPLE2 = examples[1].positions;
+const EXAMPLE3 = examples[2].positions;
+// const EXAMPLE4 = examples[3].positions;
 const N_TRIALS = trial_list.length;
 // const TIME_PER_TRIAL = dataset[0].positions.length / 24;
-var EXP_DURATION = 15 //  5 + (2.0 * TIME_PER_TRIAL) * N_TRIALS / 60.0; // in minutes
+var EXP_DURATION = 20 //  in minutes
 const MOT_WIDTH = 720; // pixels
 const MOT_HEIGHT = 480; // pixels
 // const STIM_DEG = 10;
@@ -231,7 +232,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EASY_EXAMPLE, false, false, false, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE1, false, false, false, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
@@ -248,7 +249,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, EASY_EXAMPLE, false, true, false, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE1, false, true, false, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
@@ -277,7 +278,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, MIX_EXAMPLE, false, true, true, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE2, false, true, true, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,
@@ -298,7 +299,7 @@ export async function run({ assetPaths, input = {}, environment, title, version 
         allow_backward: false,
     });
 
-    instruct_tl.push(gen_trial(jsPsych, 0, HARD_EXAMPLE, false));
+    instruct_tl.push(gen_trial(jsPsych, 0, EXAMPLE3, false));
 
     instruct_tl.push({
         type: InstructionsPlugin,

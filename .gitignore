@@ -14,6 +14,7 @@ yarn-error.log*
 
 .jspsych-builder/
 assets/
+assets/*.json
 packaged/
 data/
-prolific/
+old_assets/

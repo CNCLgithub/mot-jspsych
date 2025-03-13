@@ -60,7 +60,7 @@ def parse_subj_data(timeline: dict, idx: int):
 
     for exp_trial in timeline:
         scene = exp_trial.get("trial_id", None)
-        reversed = exp_trial.get("reversed", None)
+        reversed = bool(exp_trial.get("reversed", None))
         order = exp_trial.get("trial_index", None)
         target_designations = exp_trial.get("selected_objects", None)
         effort_rating = exp_trial.get("response", None)
@@ -115,8 +115,11 @@ def main():
     args = parser.parse_args()
     raw = []
     with open(args.dataset, "r") as f:
-        for subj in f:
-            raw.append(json.loads(subj))
+        for (i, subj) in enumerate(f):
+            try:
+                raw.append(json.loads(subj))
+            except:
+                print(f'Could not interpret entry {i}')
 
     performance = pl.DataFrame(schema=perf_schema)
     effort_slider = pl.DataFrame(schema=slider_schema)
