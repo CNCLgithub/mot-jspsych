@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version study3-pilot
+ * @version study3-pilot-v4
  *
  * @assets assets/
  */
