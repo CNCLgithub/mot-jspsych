@@ -1,5 +1,5 @@
 import { JsPsych, JsPsychPlugin, ParameterType, TrialType } from "jspsych";
-import anime from 'animejs';
+import anime from "animejs";
 
 const info = <const>{
     name: "MOT",
@@ -8,14 +8,16 @@ const info = <const>{
             // BOOL, STRING, INT, FLOAT, FUNCTION, KEY, KEYS, SELECT, HTML_STRING,
             // IMAGE, AUDIO, VIDEO, OBJECT, COMPLEX
             type: ParameterType.STRING,
-            description: "The json-serialized string encoding motion frames." +
+            description:
+                "The json-serialized string encoding motion frames." +
                 " The string should decode into an array of arrays, where the first" +
                 " dimension denotes the number of time steps, and the second dimension" +
                 " denotes the state for each object.",
         },
         targets: {
             type: ParameterType.INT,
-            description: "The first N objects in `scene` are denoted as targets."
+            description:
+                "The first N objects in `scene` are denoted as targets.",
         },
         object_class: {
             type: ParameterType.STRING,
@@ -44,7 +46,8 @@ const info = <const>{
         step_dur: {
             type: ParameterType.FLOAT,
             default: 41.67,
-            description: "Duration of a single step in the motion phase (in ms).",
+            description:
+                "Duration of a single step in the motion phase (in ms).",
         },
         premotion_dur: {
             type: ParameterType.FLOAT,
@@ -64,7 +67,8 @@ const info = <const>{
         effort_dial: {
             type: ParameterType.BOOL,
             default: false,
-            description: "Display and collect responses from a dynamic effort dial.",
+            description:
+                "Display and collect responses from a dynamic effort dial.",
         },
         world_scale: {
             type: ParameterType.FLOAT,
@@ -87,12 +91,12 @@ type Info = typeof info;
 class MOTPlugin implements JsPsychPlugin<Info> {
     static info = info;
 
-    constructor(private jsPsych: JsPsych) { }
+    constructor(private jsPsych: JsPsych) {}
 
     trial(display_element: HTMLElement, trial: TrialType<Info>) {
         /**
-            * SETUP
-            */
+         * SETUP
+         */
 
         // VARIABLE DECLARATIONS
         const state = JSON.parse(trial.scene);
@@ -107,9 +111,11 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         const world_to_display = trial.display_width / trial.world_scale;
         // assuming objects are 40 units -> how many pixels
         const obj_dim = 40.0 * world_to_display; // REVIEW
-        const screen_width = document.getElementsByTagName('body')[0].offsetWidth;
+        const screen_width =
+            document.getElementsByTagName("body")[0].offsetWidth;
         // audio for effort dial
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioCtx = new (window.AudioContext ||
+            window.webkitAudioContext)();
         const gain = audioCtx.createGain();
         const oscillator = audioCtx.createOscillator();
 
@@ -131,7 +137,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
         // initialize animation timeline
         let tl = anime.timeline({
-            easing: 'linear',
+            easing: "linear",
             autoplay: false,
         });
 
@@ -143,7 +149,6 @@ class MOTPlugin implements JsPsychPlugin<Info> {
                 oscillator.stop();
                 gain.disconnect(audioCtx.destination);
             }
-
 
             // viz prompt
             if (trial.target_designation) {
@@ -165,13 +170,14 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             // x is already the same space (+-0)
             let tx = x;
             // y goes from ([-dy, +dy]) -> ([0, 2dy])
-            let ty = -y + (0.5 * (trial.display_height - obj_dim));
-            return ([tx, ty]);
+            let ty = -y + 0.5 * (trial.display_height - obj_dim);
+            return [tx, ty];
         };
 
         // populate scene with objects
         for (let i = 0; i < obj_elems.length; i++) {
-            const css_cls = (i < trial.targets) ? trial.target_class : trial.object_class
+            const css_cls =
+                i < trial.targets ? trial.target_class : trial.object_class;
             const obj_el = document.createElement("span");
             obj_el.className = css_cls;
             obj_el.style = `width:${obj_dim}px;height:${obj_dim}px`;
@@ -180,9 +186,10 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             if (trial.target_designation) {
                 obj_el.addEventListener("click", () => {
                     if (tl.completed) {
-                        selected[i] = !(selected[i]);
-                        obj_el.className = selected[i] ?
-                            trial.target_class : trial.object_class;
+                        selected[i] = !selected[i];
+                        obj_el.className = selected[i]
+                            ? trial.target_class
+                            : trial.object_class;
                         // after a click - check if enough objects are selected
                         after_response();
                     }
@@ -208,8 +215,10 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         btn_el.id = "resp_btn";
         btn_el.disabled = true;
         btn_el.style = "margin:10px";
-        btn_el.innerHTML = "Next"
-        btn_el.addEventListener("click", (_) => { end_trial(); });
+        btn_el.innerHTML = "Next";
+        btn_el.addEventListener("click", (_) => {
+            end_trial();
+        });
         display_element.appendChild(btn_el);
 
         // pre-motion phase
@@ -232,21 +241,23 @@ class MOTPlugin implements JsPsychPlugin<Info> {
 
         // motion phase
         for (let i = 0; i < n_objects; i++) {
-            let i_pos = state.map(frame => t_pos(frame[i].slice(0, 2)));
-            tl.add({
-                targets: obj_elems[i],
-                translateX: i_pos.map(f => ({
-                    value: f[0],
-                    duration: trial.step_dur
-                })),
-                translateY: i_pos.map(f => ({
-                    value: f[1],
-                    duration: trial.step_dur
-                })),
-                // motion begins at end of `premotion_dur`
-            }, 0);
+            let i_pos = state.map((frame) => t_pos(frame[i].slice(0, 2)));
+            tl.add(
+                {
+                    targets: obj_elems[i],
+                    translateX: i_pos.map((f) => ({
+                        value: f[0],
+                        duration: trial.step_dur,
+                    })),
+                    translateY: i_pos.map((f) => ({
+                        value: f[1],
+                        duration: trial.step_dur,
+                    })),
+                    // motion begins at end of `premotion_dur`
+                },
+                0,
+            );
         }
-
 
         // target designation phase
         // `after_response` is called whenever an object is clicked.
@@ -254,7 +265,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         const after_response = () => {
             if (tl.completed) {
                 // check for minimum number of selections
-                if (selected.filter(Boolean).length >= trial.targets) {
+                if (selected.filter(Boolean).length == trial.targets) {
                     allow_next();
                 } else {
                     disable_next();
@@ -275,7 +286,6 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             this.jsPsych.finishTrial(trial_data);
         };
 
-
         // called by `after_response`
         const allow_next = () => {
             btn_el.disabled = false;
@@ -295,16 +305,17 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             imag[0] = 0.1;
             real[1] = 0.75;
             imag[1] = 0.2;
-            const wave = audioCtx.createPeriodicWave(real, imag,
-                { disableNormalization: true });
+            const wave = audioCtx.createPeriodicWave(real, imag, {
+                disableNormalization: true,
+            });
             oscillator.setPeriodicWave(wave);
             // oscillator.frequency.value = 300.0; // defaul freq
             oscillator.connect(gain).connect(audioCtx.destination);
             // Gain settings to prevent clicking
             gain.gain.setValueAtTime(0.0, audioCtx.currentTime);
             gain.gain.setTargetAtTime(0.5, audioCtx.currentTime + 0.02, 0.01);
-            const stopTime = audioCtx.currentTime + (tot_dur / 1000.0);
-            gain.gain.setTargetAtTime(0, stopTime - 0.100, .025);
+            const stopTime = audioCtx.currentTime + tot_dur / 1000.0;
+            gain.gain.setTargetAtTime(0, stopTime - 0.1, 0.025);
             oscillator.start();
         };
 
@@ -313,15 +324,14 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         // };
         //
         const update_effort_dial = (e: MouseEvent) => {
-            const dial_value: number = (e.pageX / screen_width).clamp(0.0, 1.0)
-            const freq: number = dial_value * 400.0 + 200.00
+            const dial_value: number = (e.pageX / screen_width).clamp(0.0, 1.0);
+            const freq: number = dial_value * 400.0 + 200.0;
             const dt = performance.now() - start_time;
             oscillator.frequency.value = freq;
             const data = [dt, dial_value];
             effort_dial.push(data);
         };
     }
-
 }
 
 /**
@@ -337,7 +347,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
  * @returns A number in the range [min, max]
  * @type Number
  */
-Number.prototype.clamp = function(min, max) {
+Number.prototype.clamp = function (min, max) {
     return Math.min(Math.max(this, min), max);
 };
 
