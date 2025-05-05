@@ -95,6 +95,7 @@ def parse_subj_data(timeline: dict, idx: int):
                 print(
                     f"Could not retrieve dials responses for (subj, trial) {idx}, {scene}"
                 )
+                print(list(exp_trial.keys()))
 
     performance["uid"] = idx
     slider["uid"] = idx
@@ -118,8 +119,8 @@ def main():
         for (i, subj) in enumerate(f):
             try:
                 raw.append(json.loads(subj))
-            except:
-                print(f'Could not interpret entry {i}')
+            except e:
+                print(f'Could not interpret entry {i}, with error {e}')
 
     performance = pl.DataFrame(schema=perf_schema)
     effort_slider = pl.DataFrame(schema=slider_schema)
