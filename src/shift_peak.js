@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version study3-pilot-v6
+ * @version study3-pilot-v7
  *
  * @assets assets/
  */
@@ -342,7 +342,7 @@ export async function run({
         name: "check2",
         options: [
           "A) The secondary task is to indicate your sense of effort while tracking",
-          "B) You should maintain an arm-length distance from your monitor",
+          "B) You must select four objects, or you will not continue",
           "C) You should move the slider to the left if tracking is effortful",
         ],
         required: true,
