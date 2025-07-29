@@ -1,7 +1,7 @@
 /**
  * @title Multiple Object Tracking
  * @description Track moving targets
- * @version 0.8.0
+ * @version 0.1.1
  *
  * @assets assets/
  */
@@ -42,10 +42,10 @@ const MOT_HEIGHT = 480; // pixels
 // const PIXELS_ER_UNIT = MOT_DIM / STIM_DEG;
 var CHINREST_SCALE = 1.0; // to adjust pixel dimensions
 // Debug Variables
-// const SKIP_PROLIFIC_ID = false;
-// const SKIP_INSTRUCTIONS = false;
-const SKIP_PROLIFIC_ID = true;
-const SKIP_INSTRUCTIONS = true;
+const SKIP_PROLIFIC_ID = false;
+const SKIP_INSTRUCTIONS = false;
+// const SKIP_PROLIFIC_ID = true;
+// const SKIP_INSTRUCTIONS = true;
 
 function gen_trial(
   jspsych,
@@ -404,8 +404,8 @@ export async function run({
   }
 
   // add exp trials with random shuffle, unique per session
+  // for (const trial of trial_list) {
   for (const trial of jsPsych.randomization.shuffle(trial_list)) {
-    // for (const trial of trial_list) {
     const [tid, reverse] = trial.slice(0, 2);
     const positions = dataset[tid - 1].positions;
     timeline.push(gen_trial(jsPsych, tid, positions, reverse));
