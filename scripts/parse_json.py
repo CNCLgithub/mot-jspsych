@@ -93,9 +93,9 @@ def parse_subj_data(timeline: dict, idx: int):
                     dial["scale"].append(scale)
             else:
                 print(
-                    f"Could not retrieve dials responses for (subj, trial) {idx}, {scene}"
+                    f"No dials responses for subj {idx}, trial {scene}"
                 )
-                print(list(exp_trial.keys()))
+                print(exp_trial)
 
     performance["uid"] = idx
     slider["uid"] = idx
@@ -114,22 +114,20 @@ def main():
     )
     parser.add_argument("dataset", type=str, help="Which scene dataset to use")
     args = parser.parse_args()
-    raw = []
-    with open(args.dataset, "r") as f:
-        for (i, subj) in enumerate(f):
-            try:
-                raw.append(json.loads(subj))
-            except e:
-                print(f'Could not interpret entry {i}, with error {e}')
-
     performance = pl.DataFrame(schema=perf_schema)
     effort_slider = pl.DataFrame(schema=slider_schema)
     effort_dial = pl.DataFrame(schema=dial_schema)
-    for idx, subj in enumerate(raw):
-        (p, s, k) = parse_subj_data(subj, idx)
-        performance.vstack(p, in_place=True)
-        effort_slider.vstack(s, in_place=True)
-        effort_dial.vstack(k, in_place=True)
+    with open(args.dataset, "r") as f:
+        for (idx, raw) in enumerate(f):
+            try:
+                subj = json.loads(raw)
+                (p, s, k) = parse_subj_data(subj, idx)
+                performance.vstack(p, in_place=True)
+                effort_slider.vstack(s, in_place=True)
+                effort_dial.vstack(k, in_place=True)
+            except e:
+                print(f'Could not interpret entry {i}, with error {e}')
+
 
     print(performance)
     print(effort_slider)

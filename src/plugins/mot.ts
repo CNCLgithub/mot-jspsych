@@ -114,6 +114,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
         const screen_width =
             document.getElementsByTagName("body")[0].offsetWidth;
         // audio for effort dial
+        let mouse_rt: number = -1000;
         const audioCtx = new (window.AudioContext ||
             window.webkitAudioContext)();
         const gain = audioCtx.createGain();
@@ -281,7 +282,7 @@ class MOTPlugin implements JsPsychPlugin<Info> {
                 effort_dial_responses: effort_dial,
             };
             display_element.innerHTML = "";
-            // console.log(trial_data);
+            console.log(trial_data);
             // end trial
             this.jsPsych.finishTrial(trial_data);
         };
@@ -319,17 +320,17 @@ class MOTPlugin implements JsPsychPlugin<Info> {
             oscillator.start();
         };
 
-        // const update_mouse_pos = (e: MouseEvent) => {
-        //     mouse_y = e.pageY;
-        // };
-        //
         const update_effort_dial = (e: MouseEvent) => {
+            // Set frequency
             const dial_value: number = (e.pageX / screen_width).clamp(0.0, 1.0);
             const freq: number = dial_value * 400.0 + 200.0;
-            const dt = performance.now() - start_time;
             oscillator.frequency.value = freq;
-            const data = [dt, dial_value];
-            effort_dial.push(data);
+            // Add entry at most every 50ms
+            const dt = performance.now() - start_time;
+            if (dt - mouse_rt >= 50) {
+                effort_dial.push([dt, dial_value]);
+                mouse_rt = dt;
+            }
         };
     }
 }
